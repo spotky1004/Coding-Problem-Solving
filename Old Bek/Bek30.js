@@ -1,0 +1,1 @@
+f=[0,1];a="";q=[0,2,5,9,14,20];for(i=0;i++-24;){for(j=-i;j<=i;j++){if(j){s=j>0?"/":"\\";_j=(j<0?i+j:i-j)+1;for(k=_j;k--;)a+=q.includes(k)?s:" ";if(i-1&&_j==i)a+=s.repeat(f[1]);a+="\n"}}f=[f[1],f[0]+f[1]]}console.log(a);``

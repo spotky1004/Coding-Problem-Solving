@@ -1,15 +1,15 @@
 /** @type {"dev" | "submit"} */
-const mode = "submit";
+const mode = "dev";
 
-const input = mode === "dev" ? `0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0
-0 0 0 0 0 0 0 0 0` : (() => (require("fs").readFileSync("/dev/stdin") + "").trim())();
+const input = mode === "dev" ? `0 0 0 0 0 0 0 0 9
+0 0 0 0 0 0 0 0 8
+0 0 0 0 0 0 0 0 7
+0 0 0 0 0 0 0 0 6
+0 0 0 0 0 0 0 0 5
+0 0 0 0 0 0 0 0 4
+0 0 0 0 0 0 0 0 3
+0 0 0 0 0 0 0 0 2
+0 0 0 0 0 0 0 0 1` : (() => (require("fs").readFileSync("/dev/stdin") + "").trim())();
 
 /**
  * @typedef {(number | number[])[]} Board
@@ -181,9 +181,9 @@ function fillAvaiables(board, bundles) {
 /**
  * @param {Board} board
  * @param {Bundles} bundles 
- * @returns {Board | false}
+ * @returns {Promise<Board | false>}
  */
-function solve(board, bundles) {
+async function solve(board, bundles) {
   const result = fillAvaiables(board, bundles);
   if (!result) return false;
   const isSolved = board.every(row => row.every(n => typeof n === "number"));
@@ -219,7 +219,8 @@ function solve(board, bundles) {
       }
       newBoard[y][x] = n;
       if (mode === "dev") {
-        console.table(newBoard.map(row => row.map(n => typeof n === "number" ? n : n.join(""))));
+        console.table(newBoard.map(row => row.map(n => typeof n === "number" ? n : n.length + " left")));
+        await new Promise((res) => setTimeout(() => res(1), 200));
       }
       const result = solve(newBoard, newBundles);
       if (result) return result;
@@ -227,6 +228,6 @@ function solve(board, bundles) {
     return false;
   }
 }
-const solvedBoard = solve(startBoard, startBundle);
 
-console.log(solvedBoard.map(row => row.join(" ")).join("\n"))
+solve(startBoard, startBundle)
+  .then(solvedBoard => console.log(solvedBoard.map(row => row.join(" ")).join("\n")))

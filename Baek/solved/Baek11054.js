@@ -4,15 +4,15 @@ const seq = (
   !isDev
     ? require("fs").readFileSync("/dev/stdin").toString()
     :
-`10
-10 1 3 5 7 6 3 2 1 10`
+`1
+1`
 )
   .trim()
   .split("\n")[1]
   .split(" ")
   .map(Number);
 
-let maxLen = 0;
+let maxLen = 1;
 const increaseDp = [1];
 const decreaseDp = [1];
 for (let i = 1; i < seq.length; i++) {

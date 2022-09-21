@@ -6,4 +6,4 @@ const input = (
 ``
 )
   .trim()
-  .split("\n");
+  .split("\n").map(line => line.split(" ").map(Number));

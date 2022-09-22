@@ -3,47 +3,59 @@ const input = (
   !isDev
     ? require("fs").readFileSync("/dev/stdin").toString()
     :
-`5
-5
-1 2 1
-2 3 2
-2 4 1
-3 5 1
-4 5 3
-1 5`
+`7
+12
+1 2 7
+1 5 3
+1 6 10
+5 2 2
+2 6 6
+2 3 4
+2 4 10
+5 7 5
+5 4 11
+3 4 2
+6 4 9
+7 4 4
+1 4`
 )
   .trim()
   .split("\n").map(line => line.split(" ").map(Number));
 
 const N = input.shift()[0];
 const M = input.shift()[0];
+/** @type {boolean[]} */
+const completed = Array(N+1).fill(false);
 /** @type {Map<number, number>[]} */
-const nodes = Array.from({ length: N+1 }, _ => new Map());
+const lines = Array.from({ length: N+1 }, _ => new Map());
 for (const nodeData of input.splice(0, M)) {
   const [from, to, cost] = nodeData;
-  nodes[from].set(to, cost);
+  const prevCost = lines[from].get(to) ?? Infinity;
+  lines[from].set(to, Math.min(prevCost, cost));
 }
+
 /** @type {[number, number]} */
-const [startCity, endCity] = input.shift();
+const [startNodeNr, endNodeNr] = input.shift();
+/** @type {number[]} */
+const minimumCosts = Array.from({ length: N+1 }).fill().map((_, i) => lines[startNodeNr].get(i) ?? Infinity);
+minimumCosts[startNodeNr] = 0;
 
-let minimumCost = Infinity;
-/**
- * @param {number} curNode 
- * @param {number} curCost 
- * @param {number[]} visited 
- */
-function search(curNode, curCost) {
-  if (curCost > minimumCost) return;
-  const node = nodes[curNode];
-  for (const [to, cost] of node) {
-    node.delete(to);
-    if (to === endCity) {
-      minimumCost = Math.min(minimumCost, curCost + cost);
-    } else {
-      search(to, curCost + cost);
-    }
+/** @type {[from: number, to: number][]} */
+completed[startNodeNr] = true;
+while (true) {
+  const nodeToCheck = minimumCosts.reduce(([minNodeNr, minCost], cost, nr) => {
+    const isMinNode = completed[nr] === false && cost < minCost;
+    return isMinNode ? [nr, cost] : [minNodeNr, minCost];
+  }, [-1, Infinity])[0];
+  if (nodeToCheck === -1) break;
+  
+  const baseCost = minimumCosts[nodeToCheck];
+  const nodeLines = lines[nodeToCheck];
+  for (const [nodeToNr, cost] of nodeLines) {
+    minimumCosts[nodeToNr] = Math.min(baseCost + cost, minimumCosts[nodeToNr]);
   }
+  
+  completed[nodeToCheck] = true;
 }
-search(startCity, 0);
 
-console.log(minimumCost);
+console.log(minimumCosts[endNodeNr]);

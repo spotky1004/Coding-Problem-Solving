@@ -4,7 +4,7 @@ const input = (
     ? require("fs").readFileSync("/dev/stdin").toString()
     :
 `10
-1 111101111 1011111 10 10101010 101101110 101010101 111111111 111111110 1011111`
+1 1 1 123 1 1 1 1 1 10`
 )
   .trim()
   .split("\n")
@@ -15,22 +15,21 @@ const outputTrack = [];
 let output = "";
 
 while (numbers.length > 0) {
-  // const maxDigit = [...new Set(numbers.join("").split(""))].sort((a, b) => b - a)[0];
   let selectedIdx = 0;
   let selectedNumber = numbers[0];
-  for (let i = 0; i < numbers.length; i++) {
-    if (selectedNumber.length === 1) break;
+  loop: for (let i = 0; i < numbers.length; i++) {
     const number = numbers[i];
     if (selectedNumber === number) continue;
-    for (let j = 0; j < number.length; j++) {
-      const d1 = selectedNumber[j];
-      const d2 = number[j];
+    const m1 = selectedNumber + number;
+    const m2 = number + selectedNumber;
+    for (let j = 0; j < m1.length; j++) {
+      const d1 = m1[j];
+      const d2 = m2[j];
       if (d1 > d2) break;
       if (d1 === d2) continue;
-      if (+selectedNumber >= +number.slice(j, j + selectedNumber.length)) break;
       selectedIdx = i;
       selectedNumber = number;
-      break;
+      break loop;
     }
   }
 
@@ -42,5 +41,5 @@ while (numbers.length > 0) {
 if (output.startsWith("0")) {
   console.log(0);
 } else {
-  console.log(outputTrack, output);
+  console.log(output);
 }

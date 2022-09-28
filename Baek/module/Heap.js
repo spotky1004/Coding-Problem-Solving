@@ -1,33 +1,3 @@
-const isDev = process.platform !== "linux";
-const input = (
-  !isDev
-    ? require("fs").readFileSync("/dev/stdin").toString()
-    :
-`18
-1
--1
-0
-0
-0
-1
-1
--1
--1
-2
--2
-0
-0
-0
-0
-0
-0
-0
-`
-)
-  .trim()
-  .split("\n")
-  .map(Number);
-
 class Heap {
   /**
    * @typedef {(a: number, b: number) => boolean} CompareFn
@@ -110,17 +80,3 @@ class Heap {
     return returnVal;
   }
 }
-
-void input.shift();
-const x = input;
-
-const heap = new Heap((a, b) => b - a);
-let output = "";
-for (const val of x) {
-  if (val === 0) {
-    output += (heap.delete() ?? "0") + "\n";
-  } else {
-    heap.insert(val);
-  }
-}
-console.log(output.trim());

@@ -5,7 +5,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-let lineLeft = null
+let lineLeft = null;
 
 rl.on('line', function(line) {
   if (lineLeft === null) {

@@ -64,15 +64,15 @@ class Heap {
       const [leftIdx, rightIdx] = [curIdx * 2, curIdx * 2 + 1]
       const [childLeft, childRight] = [arr[leftIdx], arr[rightIdx]];
       let swapIdx = -1;
-      if (compareFn(childLeft, cur) < 0) swapIdx = leftIdx;
+      if (leftIdx <= size && compareFn(childLeft, cur) < 0) swapIdx = leftIdx;
       if (
         swapIdx === -1 ?
-          compareFn(childRight, cur) < 0 :
-          compareFn(childRight, childLeft) < 0
+          rightIdx < size && compareFn(childRight, cur) < 0 :
+          leftIdx < size && compareFn(childRight, childLeft) < 0
       ) swapIdx = rightIdx;
 
-      if (swapIdx === -1) break;
-
+      if (swapIdx === -1 || swapIdx > size) break;
+      
       this.swap(curIdx, swapIdx);
       curIdx = swapIdx;
     }

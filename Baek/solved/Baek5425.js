@@ -1,3 +1,4 @@
+// 반례 생성 기계
 let input = "500\n";
 for (let i = 0; i < 500; i++) {
   const a = Math.floor(Math.random() * 1e6);

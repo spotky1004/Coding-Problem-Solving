@@ -1,6 +1,9 @@
-class Heap {
+/**
+ * @template T
+ */
+ class Heap {
   /**
-   * @typedef {(a: number, b: number) => boolean} CompareFn
+   * @typedef {(a: T, b: T) => boolean} CompareFn
    */
   
   /** @type {CompareFn} */
@@ -35,8 +38,8 @@ class Heap {
   }
 
   /**
-   * @param {number} i1 
-   * @param {number} i2 
+   * @param {T} i1 
+   * @param {T} i2 
    */
   swap(i1, i2) {
     const arr = this.arr;
@@ -44,7 +47,7 @@ class Heap {
   }
 
   /**
-   * @returns {number | undefined}
+   * @returns {T | undefined}
    */
   delete() {
     if (this.size === 0) return undefined;

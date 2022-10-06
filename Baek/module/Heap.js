@@ -1,7 +1,7 @@
 /**
  * @template T
- */
- class Heap {
+*/
+class Heap {
   /**
    * @typedef {(a: T, b: T) => boolean} CompareFn
    */

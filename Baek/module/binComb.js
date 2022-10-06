@@ -1,6 +1,6 @@
 /**
  * @param {number} n 
- */
+*/
 function binComb(n) {
   let combs = ["0", "1"];
   for (let i = 1; i < n; i++) {

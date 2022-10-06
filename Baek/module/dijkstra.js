@@ -12,7 +12,7 @@ for (const [from, to, cost] of rawLines) {
  * @param {number} startNode 
  * @param {Map<number, number>[]} nodesMap 
  * @returns {number[]}
- */
+*/
 function dijkstra(nodeCount, startNode, nodesMap) {
   const costs = Array(nodeCount + 1).fill(Infinity);
   costs[startNode] = 0;

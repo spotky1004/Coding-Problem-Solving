@@ -1,7 +1,7 @@
 /**
  * @param {number} a 
  * @param {number} b 
- */
+*/
 function gcd(a, b) {
   return b ? gcd(b, a%b) : a;
 }
@@ -9,7 +9,7 @@ function gcd(a, b) {
 
 /**
  * @param  {...number} n 
- */
+*/
 function lcm(...n) {
   if (n.length === 1) return n[0];
   let v = (n[0] * n[1]) / gcd(n[0], n[1]);

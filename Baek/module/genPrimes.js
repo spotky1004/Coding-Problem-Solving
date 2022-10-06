@@ -1,6 +1,6 @@
 /**
  * @param {number} n 
- */
+*/
 function genPrimes(n) {
   /** @type {(number | null)[]} */
   const net = Array.from({ length: n }, (_, i) => i);

@@ -3,10 +3,13 @@ const [[N], nums, [Q], ...questions] = (
   !isDev
     ? require("fs").readFileSync("/dev/stdin").toString()
     :
-`8
-11 11 1 1 11 11 1 1
-1
-3 8`
+`7
+1 2 1 3 1 2 1
+4
+1 3
+2 5
+3 3
+5 7`
 )
   .trim()
   .split("\n").map(line => line.split(" ").map(Number));
@@ -57,8 +60,7 @@ for (const question of questions) {
   if (len%2 === 0) {
     const halfLen = Math.floor(len / 2);
     const centerIdx = S + halfLen - 1;
-    console.log(S, E, centerIdx);
-    if (dp2[centerIdx] >= len/2 - 1) {
+    if (dp2[centerIdx] >= len/2) {
       out += "1\n";
     } else {
       out += "0\n";

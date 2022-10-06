@@ -9,9 +9,9 @@ function genPrimes(n) {
   for (let i = 4; i < net.length; i += 2) {
     net[i] = null;
   }
-  for (let i = 2; i < net.length; i++) {
+  for (let i = 3; i < net.length; i++) {
     if (net[i] === null) continue;
-    for (let j = i; j < net[i]; j += i * 2) {
+    for (let j = i * 3; j < net.length; j += i * 2) {
       net[j] = null;
     }
   }

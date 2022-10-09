@@ -3,10 +3,12 @@ const [, ...field] = (
   !isDev
     ? require("fs").readFileSync("/dev/stdin").toString()
     :
-`3 6
-111000
-101111
-111111`
+`5 5
+01100
+01011
+11111
+01111
+11111`
 )
   .trim()
   .split("\n")
@@ -24,33 +26,8 @@ for (let y = 0; y < R; y++) {
   for (let x = 0; x < C; x++) {
     const tile = row[x];
     if (!tile) continue;
-    let dp1Val = 1;
-    let x1 = x - 1;
-    let y1 = y + 1;
-    while (
-      0 <= x1 && x1 < C &&
-      0 <= y1 && y1 < R &&
-      field[y1][x1]
-    ) {
-      dp1Val++;
-      x1--;
-      y1++;
-    }
-    dp1[y][x] = dp1Val;
-
-    let dp2Val = 1;
-    let x2 = x + 1;
-    let y2 = y + 1;
-    while (
-      0 <= x2 && x2 < C &&
-      0 <= y2 && y2 < R &&
-      field[y2][x2]
-    ) {
-      dp2Val++;
-      x2++;
-      y2++;
-    }
-    dp2[y][x] = dp2Val;
+    dp1[y][x] = ((dp1[y - 1] ? dp1[y - 1][x + 1] : 0) ?? 0) + 1;
+    dp2[y][x] = ((dp2[y - 1] ? dp2[y - 1][x - 1] : 0) ?? 0) + 1;
   }
 }
 
@@ -61,13 +38,13 @@ for (let y = 0; y < R; y++) {
     if (maxPotential < 0) continue;
     for (let i = maxPotential; i >= 1; i--) {
       if (
-        0 <= y + i - 1 && y + i - 1 < R &&
+        0 <= y - i + 1 && y - i + 1 < R &&
         0 <= x + i - 1 && x + i - 1 < C &&
         0 <= x - i + 1 && x - i + 1 < C &&
         dp1[y][x] >= i &&
         dp2[y][x] >= i &&
-        dp1[y + i - 1][x + i - 1] >= i &&
-        dp2[y + i - 1][x - i + 1] >= i
+        dp1[y - i + 1][x - i + 1] >= i &&
+        dp2[y - i + 1][x + i - 1] >= i
       ) {
         maxSize = Math.max(maxSize, i);
         break;

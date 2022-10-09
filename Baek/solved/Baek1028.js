@@ -5,7 +5,7 @@ const [, ...field] = (
     :
 `5 5
 01100
-01011
+00011
 11111
 01111
 11111`
@@ -34,7 +34,13 @@ for (let y = 0; y < R; y++) {
 let maxSize = 0;
 for (let y = 0; y < R; y++) {
   for (let x = 0; x < C; x++) {
-    const maxPotential = Math.min(dp1[y][x], dp2[y][x]);
+    const maxPotential = Math.min(
+      C - x + 1,
+      Math.abs(x - C) + 1,
+      Math.floor((y + 2) / 2),
+      dp1[y][x],
+      dp2[y][x]
+    );
     if (maxPotential < 0) continue;
     for (let i = maxPotential; i >= 1; i--) {
       if (

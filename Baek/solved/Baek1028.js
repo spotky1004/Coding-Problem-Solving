@@ -41,7 +41,7 @@ for (let y = 0; y < R; y++) {
       dp1[y][x],
       dp2[y][x]
     );
-    if (maxPotential < 0) continue;
+    if (maxPotential < 0 || maxPotential < maxSize) continue;
     for (let i = maxPotential; i >= 1; i--) {
       if (
         0 <= y - i + 1 && y - i + 1 < R &&

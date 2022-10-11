@@ -33,3 +33,5 @@ for (const [from, to, cost] of lines) {
     union(from, to);
   }
 }
+
+// const finds = Array.from({ length: V }, (_, i) => i + 1).map(v => find(v));

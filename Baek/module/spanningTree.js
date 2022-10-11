@@ -21,3 +21,17 @@ function union(a, b){
 
   roots[b] = a;
 }
+
+
+
+void lines.sort((a, b) => a[2] - b[2]);
+
+let costAcc = 0;
+for (const [from, to, cost] of lines) {
+  if(find(from) !== find(to)) {
+    costAcc += cost;
+    union(from, to);
+  }
+}
+
+// const finds = Array.from({ length: V }, (_, i) => i + 1).map(v => find(v));

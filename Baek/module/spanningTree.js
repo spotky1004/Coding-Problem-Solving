@@ -35,3 +35,8 @@ for (const [from, to, cost] of lines) {
 }
 
 // const finds = Array.from({ length: V }, (_, i) => i + 1).map(v => find(v));
+// if (finds.every(v => v === finds[0]) || V === 1) {
+//   console.log(costAcc);
+// } else {
+//   console.log(-1);
+// }

@@ -1,3 +1,4 @@
+const rank = Array.from({ length : V + 1 }, _ => 1);
 const roots = Array.from({ length: V + 1 }, (_, i) => i);
 
 /**
@@ -19,7 +20,16 @@ function union(a, b){
   a = find(a);
   b = find(b);
 
-  roots[b] = a;
+  if (a === b) return;
+
+  if (rank[a] < rank[b]) {
+    roots[a] = b;
+  } else {
+    roots[b] = a;
+    if (rank[a] === rank[b]) {
+      rank[a]++;
+    }
+  }
 }
 
 

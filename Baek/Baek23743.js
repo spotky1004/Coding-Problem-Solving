@@ -5,7 +5,7 @@ const [[V], ...lines] = (
     :
 `4 2
 1 3 2
-2 4 3
+2 4 15
 1 10 1 10
 `
 )
@@ -55,6 +55,7 @@ function union(a, b){
 void lines.sort((a, b) => a[2] - b[2]);
 
 let costAcc = 0;
+const lineCostAcc = Array(V + 1).fill(0);
 for (const [from, to, cost] of lines) {
   const a = find(from);
   const b = find(to);
@@ -64,16 +65,15 @@ for (const [from, to, cost] of lines) {
   ) {
     const exitCostA = a !== 0 ? exitCosts[from - 1] : 0;
     const exitCostB = b !== 0 ? exitCosts[to - 1] : 0;
-    if (exitCostA <= cost) {
-      costAcc += exitCostA;
+    const exitCostSum = exitCostA + exitCostB;
+    if (exitCostSum <= cost) {
+      costAcc += exitCostSum;
       union(from, 0);
-    }
-    if (exitCostB <= cost) {
-      costAcc += exitCostB;
       union(to, 0);
-    }
-    if (find(from) !== 0 || find(to) !== 0) {
+    } else {
       costAcc += cost;
+      if (a !== 0) lineCostAcc[from] += cost;
+      if (b !== 0) lineCostAcc[to] += cost;
       union(from, to);
     }
   }
@@ -81,6 +81,10 @@ for (const [from, to, cost] of lines) {
 
 for (let i = 0; i < V; i++) {
   find(i + 1);
+}
+const rootCostAcc = Array(V + 1).fill(0);
+for (let i = 0; i < V; i++) {
+  
 }
 const minExitCosts = Array(V + 1).fill(-1);
 for (let i = 1; i < roots.length; i++) {

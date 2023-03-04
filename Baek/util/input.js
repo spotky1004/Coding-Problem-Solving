@@ -1,5 +1,5 @@
 const isDev = process?.platform !== "linux";
-const input = (
+const [] = (
   !isDev
     ? require("fs").readFileSync("/dev/stdin").toString()
     :

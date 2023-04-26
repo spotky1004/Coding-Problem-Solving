@@ -2,7 +2,7 @@
  * @param {number} to
  * @param {number} mod
 */
-function factroialModArr(to, mod) {
+function genFactroialMod(to, mod) {
   to = BigInt(to);
   mod = BigInt(mod);
   

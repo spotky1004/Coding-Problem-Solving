@@ -65,6 +65,7 @@ class SegmentTree {
    * @param {number} right 
    */
   sum(left, right) {
+    if (left > right) [left, right] = [right, left];
     return this.#sum(1, 1, 1 << (this.height - 1), left, right);
   }
 

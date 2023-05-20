@@ -4,7 +4,7 @@
 class LazySegmentTree {
   /**
    * @typedef {(left: (null | T), right: (null | T)) => T} SumFunc 
-   * @typedef {(cur: T, curLazy: T, updateValue: T, start: T, end: T)} LazyProcessFunc
+   * @typedef {(cur: T, curLazy: T, updateValue: T, start: T, end: T)} LazyProcessFunc 
    * @typedef {(cur: T, curLazy: T, leftLazy: T, rightLazy: T, updateValue: T, start: number, end: number) => [newCur: T, newLeftLazy: T, newRightLazy: T]} LazyUpdateFunc 
    */
 

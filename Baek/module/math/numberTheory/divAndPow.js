@@ -22,11 +22,11 @@ function divAndPow(a, b, p) {
  * @param {BigInt} p
 */
 function divAndPow(a, b, p) {
-  const bin = Array.from(b.toString(2)).reverse();
   let out = 1n;
   let curMul = a;
-  for (let i = 0; i < bin.length; i++) {
-    if (bin[i] === "1") {
+  const loopCount = BigInt(Math.ceil(Math.log2(Number(b))) + 1);
+  for (let i = 0n; i < loopCount; i++) {
+    if (b & 1n << i) {
       out = out*curMul % p;
     }
     curMul = curMul**2n % p;

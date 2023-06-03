@@ -2,7 +2,7 @@
  * @param {number} leftCount 
  * @param {number} rightCount 
  * @param {number[][]} connections 
- * @returns 
+ * @returns {number} 
 */
 function bipartiteMatching(leftCount, rightCount, connections) {
   const occuipedBy = Array(rightCount).fill(-1);

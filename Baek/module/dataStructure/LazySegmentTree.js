@@ -1,173 +1,178 @@
 /**
- * @template {any} T 
+ * @typedef {number} LazyType
+*/
+/**
+ * @template {any[]} T 
+ * @template U 
 */
 class LazySegmentTree {
   /**
-   * @typedef {(left: (null | T), right: (null | T)) => T} SumFunc 
-   * @typedef {(cur: T, curLazy: T, updateValue: T, start: T, end: T)} LazyProcessFunc 
-   * @typedef {(cur: T, curLazy: T, leftLazy: T, rightLazy: T, updateValue: T, start: number, end: number) => [newCur: T, newLeftLazy: T, newRightLazy: T]} LazyUpdateFunc 
+   * @typedef {T} TreeType 
+   * @typedef {LazyType[]} LazyTree
+   * @typedef {T extends readonly (infer ElementType)[] ? ElementType : never} ElementType 
+   * @typedef {(left: ElementType | U, right: ElementType | U) => ElementType} MergeFunc 
+   * @typedef {(element: ElementType | U, index: number, s: number, e: number, ...params: any[]) => [newEl: ElementType, lazy: LazyType]} UpdateFunc 
+   * @typedef {UpdateFunc[]} UpdateFuncs 
+   * @typedef {(curLazy: LazyType | U, lazy: LazyType | U) => ElementType} LazyMergeFunc 
+   * @typedef {(element: ElementType | U, lazy: LazyType | U, index: number, s: number, e: number) => ElementType} LazyApplyFunc 
    */
 
-  /** @type {number} */
-  height = 0;
   /** @type {number} */
   size = 0;
-  /** @type {(null | T)[]} */
-  tree = [null];
-  /** @type {(null | T)[]} */
-  lazy = [null];
-  /** @type {SumFunc} */
-  sumFunc = (left, right) => (left ?? 0) + (right ?? 0);
-
-  /** @type {T} */
-  defaultLazyValue = null;
-  /** @type {LazyProcessFunc} */
-  lazyProcessFunc = (cur, curLazy, updateValue, start, end) => {
-    return this.sumFunc(cur, this.sumFunc(curLazy, updateValue * (end - start + 1)));
-  }
-  /** @type {LazyUpdateFunc} */
-  lazyUpdateFunc = (cur, curLazy, leftLazy, rightLazy, updateValue, start, end) => {
-    return [
-      this.lazyProcessFunc(cur, curLazy, updateValue, start, end),
-      this.sumFunc(leftLazy, updateValue),
-      this.sumFunc(rightLazy, updateValue)
-    ];
-  }
+  /** @type {number} */
+  height = 0;
+  /** @type {TreeType} */
+  tree = null;
+  /** @type {LazyTree} */
+  lazy = null;
+  /** @type {ElementType} */
+  defaultValue = null;
+  /** @type {MergeFunc} */
+  mergeFunc = null;
+  /** @type {UpdateFuncs} */
+  updateFuncs = [];
+  /** @type {LazyMergeFunc} */
+  lazyMergeFunc = null;
+  /** @type {LazyApplyFunc} */
+  lazyApplyFunc = null;
 
   /**
-   * @param {T[]} arr 
-   * @param {SumFunc} sumFunc 
-   * @param {T} defaultLazyValue 
-   * @param {LazyFunc} lazyFunc
+   * @param {T} values 
+   * @param {U} defaultValue 
+   * @param {MergeFunc} mergeFunc 
+   * @param {UpdateFuncs} queryFuncs 
+   * @param {LazyMergeFunc} lazyMergeFunc 
+   * @param {LazyApplyFunc} lazyApplyFunc 
    */
-  constructor(arr, sumFunc, defaultLazyValue, lazyFunc) {
-    if (sumFunc) this.sumFunc = sumFunc;
-    if (lazyFunc) this.lazyFunc = lazyFunc;
+  constructor(values, defaultValue, mergeFunc, queryFuncs, lazyMergeFunc, lazyApplyFunc) {
+    this.size = values.length;
+    this.height = Math.ceil(Math.log2(values.length)) + 1;
+    this.mergeFunc = mergeFunc;
+    this.updateFuncs = queryFuncs;
+    this.lazyMergeFunc = lazyMergeFunc;
+    this.lazyApplyFunc = lazyApplyFunc;
+    
+    this.defaultValue = defaultValue;
+    this.tree = Array(1 << this.height).fill(this.defaultValue);
+    this.lazy = Array(1 << this.height).fill(this.defaultValue);
 
-    this.height = Math.ceil(Math.log2(arr.length)) + 1;
-    this.tree = Array(1 << this.height).fill(null);
-    this.lazy = Array(1 << this.height).fill(null);
-    this.size = arr.length;
-
-    let tmp = 1 << (this.height - 1);
-    for (let i = 0; i < arr.length; i++) {
-      this.tree[i + tmp] = arr[i];
-      this.lazy[i + tmp] = defaultLazyValue;
+    const leafStartIdx = 1 << (this.height - 1);
+    for (let i = 0; i < values.length; i++) {
+      this.tree[i + leafStartIdx] = values[i];
     }
 
-    for (let d = this.height - 1; d >= 1; d--) {
-      const start = 1 << (d - 1);
-
-      for (let i = start; i < 2 * start; i++) {
-        const left = this.tree[i * 2];
-        const right = this.tree[i * 2 + 1];
+    for (let depth = this.height - 1; depth >= 1; depth--) {
+      const startIdx = 1 << (depth - 1);
+      for (let i = startIdx; i < 2 * startIdx; i++) {
+        const leftEl = this.tree[i * 2];
+        const rightEl = this.tree[i * 2 + 1];
 
         if (
-          left === null &&
-          right === null
+          leftEl === this.defaultValue &&
+          rightEl === this.defaultValue
         ) continue;
-
-        this.tree[i] = this.sumFunc(left, right);
-        this.tree[i] = defaultLazyValue;
+        this.tree[i] = this.mergeFunc(
+          leftEl !== this.defaultValue ? leftEl : defaultValue,
+          rightEl !== this.defaultValue ? rightEl : defaultValue
+        );
       }
     }
   }
 
   /**
    * @param {number} idx 
-   * @param {number} start 
-   * @param {number} end 
-   * @param {T} data 
+   * @param {number} s 
+   * @param {number} e 
    */
-  #updateLazy(idx, start, end, data) {
-    end = Math.min(end, this.size);
+  updateLazy(idx, s, e) {
+    const curLazy = this.lazy[idx];
+    if (curLazy === this.defaultValue) return;
+    this.lazy[idx] = this.defaultValue;
 
-    const leftIdx = idx * 2;
-    const rightIdx = idx * 2 + 1;
+    this.tree[idx] = this.lazyApplyFunc(this.tree[idx], curLazy, idx, s, e);
+    if (s === e) return;
+    const l = idx * 2;
+    const r = l + 1;
+    this.lazy[l] = this.lazyMergeFunc(this.lazy[l], curLazy);
+    this.lazy[r] = this.lazyMergeFunc(this.lazy[r], curLazy);
+  }
 
-    const [cur, leftLazy, rightLazy] = this.lazyUpdateFunc(
-      this.tree[idx], this.lazy[idx],
-      this.lazy[idx * 2], this.lazy[idx * 2 + 1],
-      data, start, end
-    );
+  /**
+   * @param {number} type 
+   * @param {number} idx 
+   * @param  {...any} params 
+   */
+  update(type, idx, ...params) {
+    this.updateRange(type, idx, idx, ...params);
+  }
 
-    this.tree[idx] = cur;
-    if (
-      this.lazy[leftIdx] !== null &&
-      typeof this.lazy[leftIdx] !== "undefined"
-    ) this.lazy[leftIdx] = leftLazy;
-    if (
-      this.lazy[rightIdx] !== null &&
-      typeof this.lazy[rightIdx] !== "undefined"
-    ) this.lazy[rightIdx] = rightLazy;
+  /**
+   * @param {number} type 
+   * @param {number} l 
+   * @param {number} r 
+   * @param  {...any} params 
+   */
+  updateRange(type, l, r, ...params) {
+    this.#updateRange(type, 1, 1, 1 << (this.height - 1), l, r, params);
+  }
+
+  /**
+   * @param {number} type 
+   * @param {number} idx 
+   * @param {number} s 
+   * @param {number} e 
+   * @param {number} l 
+   * @param {number} r 
+   * @param {any[]} params 
+   */
+  #updateRange(type, idx, s, e, l, r, params) {
+    this.updateLazy(idx, s, e);
+    if (r < s || e < l) return;
+
+    const lIdx = idx * 2;
+    const rIdx = lIdx + 1;
+
+    if (l <= s && e <= r) {
+      const [newEl, lazy] = this.updateFuncs[type](this.tree[idx], idx, s, e, ...params);
+      this.tree[idx] = newEl;
+      if (s === e) return;
+      this.lazy[lIdx] = this.lazyMergeFunc(this.lazy[lIdx], lazy);
+      this.lazy[rIdx] = this.lazyMergeFunc(this.lazy[rIdx], lazy);
+      return;
+    }
+
+    const m = ((s + e) / 2) | 0;
+    this.#updateRange(type, lIdx, s, m, l, r, params);
+    this.#updateRange(type, rIdx, m + 1, e, l, r, params);
+    this.tree[idx] = this.mergeFunc(this.tree[lIdx], this.tree[rIdx]);
+  }
+
+  /**
+   * @param {number} l 
+   * @param {number} r 
+   * @returns {ElementType} 
+   */
+  sum(l, r) {
+    if (l > r) [l, r] = [r, l];
+    return this.#sum(1, 1, 1 << (this.height - 1), l, r);
   }
 
   /**
    * @param {number} idx 
-   * @param {T} data 
+   * @param {number} s 
+   * @param {number} e 
+   * @param {number} l 
+   * @param {number} r 
+   * @returns {ElementType} 
    */
-  update(idx, data) {
-    this.updateRange(idx, idx, data);
-  }
+  #sum(idx, s, e, l, r) {
+    this.updateLazy(idx, s, e);
+    if (r < s || e < l) return this.defaultValue;
+    if (l <= s && e <= r) return this.tree[idx];
 
-  /**
-   * @param {number} left 
-   * @param {number} right 
-   * @param {T} data 
-   */
-  updateRange(left, right, data) {
-    if (left > right) [left, right] = [right, left];
-    this.#updateRange(1, 1, 1 << (this.height - 1), left, right, data);
-  }
-
-  #updateRange(idx, start, end, left, right, data) {
-    if (right < start || end < left) {
-      return;
-    }
-    
-    if (left <= start && end <= right) {
-      this.#updateLazy(idx, start, end, data);
-      return;
-    } else {
-      if (this.lazy[idx] !== this.defaultLazyValue) {
-        this.#updateLazy(idx, start, end, data);
-      }
-      
-      const halfLen = (end - start + 1) / 2;
-      this.#updateRange(idx, start, start + halfLen - 1, left, right, data);
-      this.#updateRange(idx, start + halfLen, end, left, right, data);
-    }
-  }
-  
-  /**
-   * @param {number} left 
-   * @param {number} right 
-   */
-  sum(left, right) {
-    if (left > right) [left, right] = [right, left];
-    return this.#sum(1, 1, 1 << (this.height - 1), left, right);
-  }
-
-  /**
-   * @param {number} start 
-   * @param {number} end 
-   * @param {number} left 
-   * @param {number} right 
-   */
-  #sum(idx, start, end, left, right) {
-    if (right < start || end < left) {
-      return null;
-    }
-    
-    if (this.lazy[idx] !== this.defaultLazyValue) this.#updateLazy(idx, start, end, this.defaultLazyValue);
-    
-    if (left <= start && end <= right) {
-      return this.tree[idx];
-    }
-    const halfLen = (end - start + 1) / 2;
-    return this.sumFunc(
-      this.#sum(idx * 2, start, start + halfLen - 1, left, right),
-      this.#sum(idx * 2 + 1, start + halfLen, end, left, right)
-    );
+    const m = ((s + e) / 2) | 0;
+    const lSum = this.#sum(idx * 2, s, m, l, r);
+    const rSum = this.#sum(idx * 2 + 1, m + 1, e, l, r);
+    return this.mergeFunc(lSum, rSum);
   }
 }

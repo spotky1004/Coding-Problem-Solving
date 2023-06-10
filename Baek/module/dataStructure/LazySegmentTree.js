@@ -13,7 +13,7 @@ class LazySegmentTree {
    * @typedef {(left: ElementType | U, right: ElementType | U) => ElementType} MergeFunc 
    * @typedef {(element: ElementType | U, index: number, s: number, e: number, ...params: any[]) => [newEl: ElementType, lazy: LazyType]} UpdateFunc 
    * @typedef {UpdateFunc[]} UpdateFuncs 
-   * @typedef {(curLazy: LazyType | U, lazy: LazyType | U) => ElementType} LazyMergeFunc 
+   * @typedef {(curLazy: LazyType | U, lazy: LazyType | U, idx: number, s: number, e: number) => ElementType} LazyMergeFunc 
    * @typedef {(element: ElementType | U, lazy: LazyType | U, index: number, s: number, e: number) => ElementType} LazyApplyFunc 
    */
 
@@ -91,10 +91,11 @@ class LazySegmentTree {
 
     this.tree[idx] = this.lazyApplyFunc(this.tree[idx], curLazy, idx, s, e);
     if (s === e) return;
+    const m = ((s + e) / 2) | 0;
     const l = idx * 2;
     const r = l + 1;
-    this.lazy[l] = this.lazyMergeFunc(this.lazy[l], curLazy);
-    this.lazy[r] = this.lazyMergeFunc(this.lazy[r], curLazy);
+    this.lazy[l] = this.lazyMergeFunc(this.lazy[l], curLazy, l, s, m);
+    this.lazy[r] = this.lazyMergeFunc(this.lazy[r], curLazy, r, m + 1, e);
   }
 
   /**
@@ -129,6 +130,7 @@ class LazySegmentTree {
     this.updateLazy(idx, s, e);
     if (r < s || e < l) return;
 
+    const m = ((s + e) / 2) | 0;
     const lIdx = idx * 2;
     const rIdx = lIdx + 1;
 
@@ -136,12 +138,11 @@ class LazySegmentTree {
       const [newEl, lazy] = this.updateFuncs[type](this.tree[idx], idx, s, e, ...params);
       this.tree[idx] = newEl;
       if (s === e) return;
-      this.lazy[lIdx] = this.lazyMergeFunc(this.lazy[lIdx], lazy);
-      this.lazy[rIdx] = this.lazyMergeFunc(this.lazy[rIdx], lazy);
+      this.lazy[lIdx] = this.lazyMergeFunc(this.lazy[lIdx], lazy, lIdx, s, m);
+      this.lazy[rIdx] = this.lazyMergeFunc(this.lazy[rIdx], lazy, rIdx, m + 1, e);
       return;
     }
 
-    const m = ((s + e) / 2) | 0;
     this.#updateRange(type, lIdx, s, m, l, r, params);
     this.#updateRange(type, rIdx, m + 1, e, l, r, params);
     this.tree[idx] = this.mergeFunc(this.tree[lIdx], this.tree[rIdx]);

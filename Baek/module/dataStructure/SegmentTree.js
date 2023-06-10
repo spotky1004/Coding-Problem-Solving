@@ -34,8 +34,8 @@ class SegmentTree {
     this.height = Math.ceil(Math.log2(values.length)) + 1;
     this.mergeFunc = mergeFunc;
     this.updateFuncs = queryFuncs;
-    
-    this.defaultValue = defaultValue ?? null;
+
+    this.defaultValue = defaultValue;
     this.tree = Array(1 << this.height).fill(this.defaultValue);
 
     const leafStartIdx = 1 << (this.height - 1);
@@ -54,8 +54,8 @@ class SegmentTree {
           rightEl === this.defaultValue
         ) continue;
         this.tree[i] = this.mergeFunc(
-          leftEl !== this.defaultValue ? leftEl : null,
-          rightEl !== this.defaultValue ? rightEl : null
+          leftEl !== this.defaultValue ? leftEl : defaultValue,
+          rightEl !== this.defaultValue ? rightEl : defaultValue
         );
       }
     }
@@ -84,33 +84,33 @@ class SegmentTree {
   }
 
   /**
-   * @param {number} left 
-   * @param {number} right 
+   * @param {number} l 
+   * @param {number} r 
    * @returns {ElementType} 
    */
-  sum(left, right) {
-    if (left > right) [left, right] = [right, left];
-    return this.#sum(1, 1, 1 << (this.height - 1), left, right);
+  sum(l, r) {
+    if (l > r) [l, r] = [r, l];
+    return this.#sum(1, 1, 1 << (this.height - 1), l, r);
   }
 
   /**
    * @param {number} idx 
-   * @param {number} start 
-   * @param {number} end 
-   * @param {number} left 
-   * @param {number} right 
+   * @param {number} s 
+   * @param {number} e 
+   * @param {number} l 
+   * @param {number} r 
    * @returns {ElementType} 
    */
-  #sum(idx, start, end, left, right) {
-    if (right < start || end < left) return this.defaultValue;
-    if (left <= start && end <= right) return this.tree[idx];
+  #sum(idx, s, e, l, r) {
+    if (r < s || e < l) return this.defaultValue;
+    if (l <= s && e <= r) return this.tree[idx];
 
-    const mid = ((start + end) / 2) | 0;
-    const leftSum = this.#sum(idx * 2, start, mid, left, right);
-    const rightSum = this.#sum(idx * 2 + 1, mid + 1, end, left, right);
+    const m = ((s + e) / 2) | 0;
+    const lSum = this.#sum(idx * 2, s, m, l, r);
+    const rSum = this.#sum(idx * 2 + 1, m + 1, e, l, r);
     return this.mergeFunc(
-      leftSum !== this.defaultValue ? leftSum : null,
-      rightSum !== this.defaultValue ? rightSum : null
+      lSum !== this.defaultValue ? lSum : null,
+      rSum !== this.defaultValue ? rSum : null
     );
   }
 }

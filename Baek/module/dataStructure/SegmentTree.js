@@ -1,68 +1,92 @@
 /**
- * @template {any} T 
-*/
+ * @template T 
+ */
 class SegmentTree {
-  /** @typedef {(left: (null | T), right: (null | T)) => T} SumFunc */
+  /**
+   * @typedef {T} TreeType 
+   * @typedef {TreeType extends readonly (infer ElementType)[] ? ElementType : never} ElementType 
+   * @typedef {(left: ElementType | null, right: ElementType | null) => ElementType} MergeFunc 
+   * @typedef {(element: ElementType | null, ...params: any[]) => ElementType} UpdateFunc 
+   * @typedef {UpdateFunc[]} UpdateFuncs 
+   */
 
   /** @type {number} */
+  size = 0;
+  /** @type {number} */
   height = 0;
-  /** @type {(null | T)[]} */
-  tree = [null];
-  /** @type {SumFunc} */
-  sumFunc = (left, right) => (left ?? 0) + (right ?? 0);
-
+  /** @type {TreeType} */
+  tree = null;
+  /** @type {ElementType} */
+  defaultValue = null;
+  /** @type {MergeFunc} */
+  mergeFunc = null;
+  /** @type {UpdateFuncs} */
+  updateFuncs = [];
 
   /**
-   * @param {T[]} arr 
-   * @param {SumFunc} sumFunc 
+   * @param {T} values 
+   * @param {any} defaultValue 
+   * @param {MergeFunc} mergeFunc 
+   * @param {UpdateFuncs} queryFuncs
    */
-  constructor(arr, sumFunc) {
-    if (sumFunc) this.sumFunc = sumFunc;
+  constructor(values, defaultValue, mergeFunc, queryFuncs) {
+    this.size = values.length;
+    this.height = Math.ceil(Math.log2(values.length)) + 1;
+    this.mergeFunc = mergeFunc;
+    this.updateFuncs = queryFuncs;
+    
+    this.defaultValue = defaultValue ?? null;
+    this.tree = Array(1 << this.height).fill(this.defaultValue);
 
-    this.height = Math.ceil(Math.log2(arr.length)) + 1;
-    this.tree = Array(1 << this.height).fill(null);
-
-    let tmp = 1 << (this.height - 1);
-    for (let i = 0; i < arr.length; i++) {
-      this.tree[i + tmp] = arr[i];
+    const leafStartIdx = 1 << (this.height - 1);
+    for (let i = 0; i < values.length; i++) {
+      this.tree[i + leafStartIdx] = values[i];
     }
 
-    for (let d = this.height - 1; d >= 1; d--) {
-      const start = 1 << (d - 1);
-
-      for (let i = start; i < 2 * start; i++) {
-        const left = this.tree[i * 2];
-        const right = this.tree[i * 2 + 1];
+    for (let depth = this.height - 1; depth >= 1; depth--) {
+      const startIdx = 1 << (depth - 1);
+      for (let i = startIdx; i < 2 * startIdx; i++) {
+        const leftEl = this.tree[i * 2];
+        const rightEl = this.tree[i * 2 + 1];
 
         if (
-          left === null &&
-          right === null
+          leftEl === this.defaultValue &&
+          rightEl === this.defaultValue
         ) continue;
-
-        this.tree[i] = this.sumFunc(left, right);
+        this.tree[i] = this.mergeFunc(
+          leftEl !== this.defaultValue ? leftEl : null,
+          rightEl !== this.defaultValue ? rightEl : null
+        );
       }
     }
   }
 
   /**
+   * @param {number} type 
    * @param {number} idx 
-   * @param {T} data 
+   * @param  {...any} params 
    */
-  update(idx, data) {
-    const leafIdx = (1 << (this.height - 1)) + idx - 1;
-    this.tree[leafIdx] = data;
+  update(type, idx, ...params) {
+    const realIdx = (1 << (this.height - 1)) + idx - 1;
+    this.tree[realIdx] = this.updateFuncs[type](
+      this.tree[realIdx] !== this.defaultValue ? this.tree[realIdx] : null,
+      ...params
+    );
 
-    for (let idx = Math.floor(leafIdx / 2); idx >= 1; idx = Math.floor(idx / 2)) {
-      this.tree[idx] = this.sumFunc(
-        this.tree[idx * 2],
-        this.tree[idx * 2 + 1]
+    for (let parentIdx = (realIdx / 2) | 0; parentIdx >= 1; parentIdx = (parentIdx / 2) | 0) {
+      const leftEl = this.tree[parentIdx * 2];
+      const rightEl = this.tree[parentIdx * 2 + 1];
+      this.tree[parentIdx] = this.mergeFunc(
+        leftEl !== this.defaultValue ? leftEl : null,
+        rightEl !== this.defaultValue ? rightEl : null,
       );
     }
   }
-  
+
   /**
    * @param {number} left 
    * @param {number} right 
+   * @returns {ElementType} 
    */
   sum(left, right) {
     if (left > right) [left, right] = [right, left];
@@ -70,22 +94,23 @@ class SegmentTree {
   }
 
   /**
+   * @param {number} idx 
    * @param {number} start 
    * @param {number} end 
    * @param {number} left 
    * @param {number} right 
+   * @returns {ElementType} 
    */
   #sum(idx, start, end, left, right) {
-    if (right < start || end < left) {
-      return null;
-    } else if (left <= start && end <= right) {
-      return this.tree[idx];
-    }
+    if (right < start || end < left) return this.defaultValue;
+    if (left <= start && end <= right) return this.tree[idx];
 
-    const halfLen = (end - start + 1) / 2;
-    return this.sumFunc(
-      this.#sum(idx * 2, start, start + halfLen - 1, left, right),
-      this.#sum(idx * 2 + 1, start + halfLen, end, left, right)
+    const mid = ((start + end) / 2) | 0;
+    const leftSum = this.#sum(idx * 2, start, mid, left, right);
+    const rightSum = this.#sum(idx * 2 + 1, mid + 1, end, left, right);
+    return this.mergeFunc(
+      leftSum !== this.defaultValue ? leftSum : null,
+      rightSum !== this.defaultValue ? rightSum : null
     );
   }
 }

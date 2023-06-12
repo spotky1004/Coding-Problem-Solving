@@ -32,7 +32,7 @@ class SegmentTree {
    * @property {UpdateFuncs} queryFuncs
    */
   /**
-   * @param {SegTreeOptions} options 
+   * @param {SegmentTreeOptions} options 
    */
   constructor(options) {
     const { values, queryFuncs, mergeFunc, defaultValue } = options;

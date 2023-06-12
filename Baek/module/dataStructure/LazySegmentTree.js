@@ -7,29 +7,29 @@
 */
 class LazySegmentTree {
   /**
-   * @typedef {T} TreeType 
+   * @typedef {T} L_TreeType 
    * @typedef {LazyType[]} LazyTree
-   * @typedef {T extends readonly (infer ElementType)[] ? ElementType : never} ElementType 
-   * @typedef {(left: ElementType | U, right: ElementType | U) => ElementType} MergeFunc 
-   * @typedef {(element: ElementType | U, index: number, s: number, e: number, ...params: any[]) => [newEl: ElementType, lazy: LazyType]} UpdateFunc 
-   * @typedef {UpdateFunc[]} UpdateFuncs 
-   * @typedef {(curLazy: LazyType | U, lazy: LazyType | U, idx: number, s: number, e: number) => ElementType} LazyMergeFunc 
-   * @typedef {(element: ElementType | U, lazy: LazyType | U, index: number, s: number, e: number) => ElementType} LazyApplyFunc 
+   * @typedef {T extends readonly (infer ElementType)[] ? ElementType : never} L_ElementType 
+   * @typedef {(left: L_ElementType | U, right: L_ElementType | U) => L_ElementType} MergeFunc 
+   * @typedef {(element: L_ElementType | U, index: number, s: number, e: number, ...params: any[]) => [newEl: L_ElementType, lazy: LazyType]} L_UpdateFunc 
+   * @typedef {L_UpdateFunc[]} L_UpdateFuncs 
+   * @typedef {(curLazy: LazyType | U, lazy: LazyType | U, idx: number, s: number, e: number) => L_ElementType} LazyMergeFunc 
+   * @typedef {(element: L_ElementType | U, lazy: LazyType | U, index: number, s: number, e: number) => L_ElementType} LazyApplyFunc 
    */
 
   /** @type {number} */
   size = 0;
   /** @type {number} */
   height = 0;
-  /** @type {TreeType} */
+  /** @type {L_TreeType} */
   tree = null;
   /** @type {LazyTree} */
   lazy = null;
-  /** @type {ElementType} */
+  /** @type {L_ElementType} */
   defaultValue = null;
   /** @type {MergeFunc} */
   mergeFunc = null;
-  /** @type {UpdateFuncs} */
+  /** @type {L_UpdateFuncs} */
   updateFuncs = [];
   /** @type {LazyMergeFunc} */
   lazyMergeFunc = null;
@@ -40,7 +40,7 @@ class LazySegmentTree {
    * @param {T} values 
    * @param {U} defaultValue 
    * @param {MergeFunc} mergeFunc 
-   * @param {UpdateFuncs} queryFuncs 
+   * @param {L_UpdateFuncs} queryFuncs 
    * @param {LazyMergeFunc} lazyMergeFunc 
    * @param {LazyApplyFunc} lazyApplyFunc 
    */
@@ -151,7 +151,7 @@ class LazySegmentTree {
   /**
    * @param {number} l 
    * @param {number} r 
-   * @returns {ElementType} 
+   * @returns {L_ElementType} 
    */
   sum(l, r) {
     if (l > r) [l, r] = [r, l];
@@ -164,7 +164,7 @@ class LazySegmentTree {
    * @param {number} e 
    * @param {number} l 
    * @param {number} r 
-   * @returns {ElementType} 
+   * @returns {L_ElementType} 
    */
   #sum(idx, s, e, l, r) {
     this.updateLazy(idx, s, e);

@@ -37,14 +37,19 @@ class LazySegmentTree {
   lazyApplyFunc = null;
 
   /**
-   * @param {T} values 
-   * @param {U} defaultValue 
-   * @param {MergeFunc} mergeFunc 
-   * @param {L_UpdateFuncs} queryFuncs 
-   * @param {LazyMergeFunc} lazyMergeFunc 
-   * @param {LazyApplyFunc} lazyApplyFunc 
+   * @typedef LazySegmentTreeOptions 
+   * @property {T} values 
+   * @property {U} defaultValue 
+   * @property {MergeFunc} mergeFunc 
+   * @property {L_UpdateFuncs} queryFuncs 
+   * @property {LazyMergeFunc} lazyMergeFunc 
+   * @property {LazyApplyFunc} lazyApplyFunc 
    */
-  constructor(values, defaultValue, mergeFunc, queryFuncs, lazyMergeFunc, lazyApplyFunc) {
+  /**
+   * @param {LazySegmentTreeOptions} options 
+   */
+  constructor(options) {
+    const { values, defaultValue, mergeFunc, queryFuncs, lazyMergeFunc, lazyApplyFunc } = options;
     this.size = values.length;
     this.height = Math.ceil(Math.log2(values.length)) + 1;
     this.mergeFunc = mergeFunc;

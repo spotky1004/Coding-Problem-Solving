@@ -1,12 +1,13 @@
 /**
  * @template T 
+ * @template U 
  */
 class SegmentTree {
   /**
    * @typedef {T} TreeType 
    * @typedef {TreeType extends readonly (infer ElementType)[] ? ElementType : never} ElementType 
-   * @typedef {(left: ElementType | null, right: ElementType | null) => ElementType} MergeFunc 
-   * @typedef {(element: ElementType | null, ...params: any[]) => ElementType} UpdateFunc 
+   * @typedef {(left: ElementType | U, right: ElementType | U) => ElementType} MergeFunc 
+   * @typedef {(element: ElementType | U, ...params: any[]) => ElementType} UpdateFunc 
    * @typedef {UpdateFunc[]} UpdateFuncs 
    */
 
@@ -24,12 +25,17 @@ class SegmentTree {
   updateFuncs = [];
 
   /**
-   * @param {T} values 
-   * @param {any} defaultValue 
-   * @param {MergeFunc} mergeFunc 
-   * @param {UpdateFuncs} queryFuncs
+   * @typedef SegmentTreeOptions 
+   * @property {T} values 
+   * @property {U} defaultValue 
+   * @property {MergeFunc} mergeFunc 
+   * @property {UpdateFuncs} queryFuncs
    */
-  constructor(values, defaultValue, mergeFunc, queryFuncs) {
+  /**
+   * @param {SegTreeOptions} options 
+   */
+  constructor(options) {
+    const { values, queryFuncs, mergeFunc, defaultValue } = options;
     this.size = values.length;
     this.height = Math.ceil(Math.log2(values.length)) + 1;
     this.mergeFunc = mergeFunc;

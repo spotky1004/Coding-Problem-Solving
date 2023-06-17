@@ -1,0 +1,1 @@
+process.stdin.on('data',i=>console.log({SONGDO:"HIGHSCHOOL",CODE:"MASTER","2023":"0611",ALGORITHM:"CONTEST"}[(i+"").trim()]))

@@ -75,7 +75,7 @@ class SegmentTree {
   update(type, idx, ...params) {
     const realIdx = (1 << (this.height - 1)) + idx - 1;
     this.tree[realIdx] = this.updateFuncs[type](
-      this.tree[realIdx] !== this.defaultValue ? this.tree[realIdx] : null,
+      this.tree[realIdx] !== this.defaultValue ? this.tree[realIdx] : this.defaultValue,
       ...params
     );
 
@@ -83,8 +83,8 @@ class SegmentTree {
       const leftEl = this.tree[parentIdx * 2];
       const rightEl = this.tree[parentIdx * 2 + 1];
       this.tree[parentIdx] = this.mergeFunc(
-        leftEl !== this.defaultValue ? leftEl : null,
-        rightEl !== this.defaultValue ? rightEl : null,
+        leftEl !== this.defaultValue ? leftEl : this.defaultValue,
+        rightEl !== this.defaultValue ? rightEl : this.defaultValue,
       );
     }
   }
@@ -115,8 +115,8 @@ class SegmentTree {
     const lSum = this.#sum(idx * 2, s, m, l, r);
     const rSum = this.#sum(idx * 2 + 1, m + 1, e, l, r);
     return this.mergeFunc(
-      lSum !== this.defaultValue ? lSum : null,
-      rSum !== this.defaultValue ? rSum : null
+      lSum !== this.defaultValue ? lSum : this.defaultValue,
+      rSum !== this.defaultValue ? rSum : this.defaultValue
     );
   }
 }

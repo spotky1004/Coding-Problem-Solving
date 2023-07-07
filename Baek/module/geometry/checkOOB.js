@@ -6,6 +6,6 @@ function checkOOB(x, y) {
   if (
     0 > x || x >= width ||
     0 > y || y >= height
-  ) return false;
-  return true;
+  ) return true;
+  return flase;
 }

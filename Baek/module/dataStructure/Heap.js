@@ -1,85 +1,59 @@
-/**
- * @template T
-*/
 class Heap {
-  /**
-   * @typedef {(a: T, b: T) => boolean} CompareFn
-   */
-  
-  /** @type {CompareFn} */
-  compareFn = (a, b) => b - a;
-  /** @type {number[]} */
-  arr = [-1];
-  /** @type {number} */
-  size = 0;
+  tree = [null];
+  compFunc = (a, b) => a - b;
 
-
-  /**
-   * @param {CompareFn} compareFn 
-   */
-  constructor(compareFn = (a, b) => b - a) {
-    this.compareFn = compareFn;
+  constructor(compFunc) {
+    if (compFunc) this.compFunc = compFunc;
   }
 
-  /**
-   * @param {number} value 
-   */
-  insert(value) {
-    const size = ++this.size;
-    const arr = this.arr;
-    const compareFn = this.compareFn;
-    arr.push(value);
-    for (let i = size; i > 1; i = i >> 1) {
-      const [cur, parent] = [arr[i], arr[i >> 1]];
-      const compare = compareFn(cur, parent);
-      if (compare >= 0) break;
-      this.swap(i, i >> 1);
+  first() {
+    return this.tree[1];
+  }
+
+  push(v) {
+    const tree = this.tree;
+    const compFunc = this.compFunc;
+
+    let curIdx = tree.length;
+    tree.push(v);
+    while (curIdx !== 1) {
+      const parentIdx = Math.floor(curIdx / 2);
+      if (compFunc(v, tree[parentIdx]) >= 0) break;
+      this.swap(curIdx, parentIdx);
+      curIdx = parentIdx;
     }
   }
 
-  /**
-   * @param {T} i1 
-   * @param {T} i2 
-   */
-  swap(i1, i2) {
-    const arr = this.arr;
-    [arr[i1], arr[i2]] = [arr[i2], arr[i1]];
-  }
-
-  /**
-   * @returns {T | undefined}
-   */
-  delete() {
-    if (this.size === 0) return undefined;
-    const arr = this.arr;
-    if (this.size === 1) {
-      this.size--;
-      return arr.pop();
+  pop() {
+    const tree = this.tree;
+    const compFunc = this.compFunc;
+    if (tree.length === 1) return null;
+    
+    const popedNode = tree[1];
+    if (tree.length === 2) {
+      this.tree = [null];
+      return popedNode;
     }
-    const size = --this.size;
-
-    const compareFn = this.compareFn;
-    const returnVal = arr[1];
-    arr[1] = arr.pop();
+    
+    const lastNode = tree.pop();
+    tree[1] = lastNode;
     let curIdx = 1;
-    while (curIdx * 2 <= size) {
-      const cur = arr[curIdx];
-      const [leftIdx, rightIdx] = [curIdx * 2, curIdx * 2 + 1]
-      const [childLeft, childRight] = [arr[leftIdx], arr[rightIdx]];
-      let swapIdx = -1;
-      if (leftIdx <= size && compareFn(childLeft, cur) < 0) swapIdx = leftIdx;
+    while (true) {
+      const childIdx = tree.length <= curIdx * 2 + 1 || compFunc(tree[curIdx * 2], tree[curIdx * 2 + 1]) <= 0 ? curIdx * 2 : curIdx * 2 + 1;
       if (
-        swapIdx === -1 ?
-          rightIdx < size && compareFn(childRight, cur) < 0 :
-          leftIdx < size && compareFn(childRight, childLeft) < 0
-      ) swapIdx = rightIdx;
-
-      if (swapIdx === -1 || swapIdx > size) break;
-      
-      this.swap(curIdx, swapIdx);
-      curIdx = swapIdx;
+        tree.length <= childIdx ||
+        compFunc(lastNode, tree[childIdx]) <= 0
+      ) break;
+      this.swap(curIdx, childIdx);
+      curIdx = childIdx;
     }
+    
+    return popedNode;
+  }
 
-    return returnVal;
+  swap(a, b) {
+    const tmp = this.tree[b];
+    this.tree[b] = this.tree[a];
+    this.tree[a] = tmp;
   }
 }

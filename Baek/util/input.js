@@ -31,6 +31,7 @@ check(`input`,
 function solve(input) {
 // input
 const [[N]] = input
+  .trim()
   .split("\n")
   .map(line => line.split(" ").map(Number));
 

@@ -12,17 +12,29 @@ if (!isDev) {
     const out = solve(input);
     const deltaStr = (new Date().getTime() - startTime).toString();
     const deltaZeroStr = " "+"0".repeat(6 - deltaStr.length);
-    if (out.toString() === answer) console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[40m", `Case ${CASE_NR}: `, ` AC `, deltaZeroStr, deltaStr+"ms");
+    if (
+      typeof answer === "string" ?
+        out.toString() === answer :
+        answer.includes(out)
+    ) console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[40m", `Case ${CASE_NR}: `, ` AC `, deltaZeroStr, deltaStr+"ms");
     else console.log("\x1b[1m%s\x1b[41m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[31m%s\x1b[0m", `Case ${CASE_NR}: `, ` WA `, deltaZeroStr, deltaStr+"ms\n", out);
   }
 
-  check("3", "");
+// cases
+check(`3 2
+0 1
+1 2`,
+`1`);
 }
 
 function solve(input) {
+// input
 const [[N]] = input
   .split("\n")
   .map(line => line.split(" ").map(Number));
 
+// code
+
+// output
 return "";
 }

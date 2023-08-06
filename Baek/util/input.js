@@ -1,4 +1,4 @@
-const isDev = typeof window !== "undefined" || require("os").userInfo().username === "spotky";
+const isDev = typeof window === "object" || require("fs").existsSync("C:/users/spotky");
 
 if (!isDev) {
   const input = require("fs").readFileSync("/dev/stdin").toString();

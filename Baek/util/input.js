@@ -35,8 +35,6 @@ const [[N]] = input
   .map(line => line.split(" ").map(Number));
 
 // code
-const arr = [];
-for (let i = 0; i < 1e6; i++) arr.push(i);
 
 // output
 return "answer";

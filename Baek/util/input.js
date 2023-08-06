@@ -9,22 +9,23 @@ if (!isDev) {
   function check(input, answer) {
     CASE_NR++;
     const startTime = new Date().getTime();
+    const startMemory = process.memoryUsage().heapUsed / 1024;
     const out = solve(input);
-    const deltaStr = (new Date().getTime() - startTime).toString();
-    const deltaZeroStr = " "+"0".repeat(6 - deltaStr.length);
+    const timeDeltaStr = (new Date().getTime() - startTime).toString();
+    const timeDeltaZeroStr = " "+"0".repeat(6 - timeDeltaStr.length);
+    const memoryDelta = ((process.memoryUsage().heapUsed / 1024) - startMemory).toFixed(0);
+    const memoryDeltaZeroStr = " "+"0".repeat(8 - memoryDelta.length);
     if (
       typeof answer === "string" ?
         out.toString() === answer :
         answer.includes(out)
-    ) console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[40m", `Case ${CASE_NR}: `, ` AC `, deltaZeroStr, deltaStr+"ms");
-    else console.log("\x1b[1m%s\x1b[41m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[31m%s\x1b[0m", `Case ${CASE_NR}: `, ` WA `, deltaZeroStr, deltaStr+"ms\n", out);
+    ) console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[0m", `Case ${CASE_NR}: `, ` AC `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
+    else console.log("\x1b[1m%s\x1b[41m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[31m%s\x1b[0m", `Case ${CASE_NR}: `, ` WA `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB\n", out);
   }
 
 // cases
-check(`3 2
-0 1
-1 2`,
-`1`);
+check(`input`,
+`answer`);
 }
 
 function solve(input) {
@@ -34,7 +35,9 @@ const [[N]] = input
   .map(line => line.split(" ").map(Number));
 
 // code
+const arr = [];
+for (let i = 0; i < 1e6; i++) arr.push(i);
 
 // output
-return "";
+return "answer";
 }

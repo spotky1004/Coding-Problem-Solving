@@ -20,10 +20,9 @@ if (!isDev) {
 }
 
 function solve(input) {
-  const [[N]] = input
-    .split("\n")
-    .map(line => line.split(" ").map(Number));
-  
-  console.log(N);
-  return "";
+const [[N]] = input
+  .split("\n")
+  .map(line => line.split(" ").map(Number));
+
+return "";
 }

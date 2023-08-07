@@ -6,7 +6,7 @@ if (!isDev) {
   const out = solve(input);
   console.log(out);
 } else {
-  let CASE_NR = 0;
+  let CASE_NR = 1;
   function check(input, answer, caseName=`Case ${CASE_NR}`) {
     CASE_NR++;
     const startTime = new Date().getTime();

@@ -29,6 +29,9 @@ check(`input`,
 `answer`);
 }
 
+/**
+ * @param {string} input 
+ */
 function solve(input) {
 // input
 const [[N]] = input

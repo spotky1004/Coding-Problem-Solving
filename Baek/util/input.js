@@ -6,6 +6,8 @@ if (!isDev) {
   const out = solve(input);
   console.log(out);
 } else {
+  require('node:v8').setFlagsFromString('--stack-size=65536');
+
   let CASE_NR = 1;
   function check(input, answer, caseName=`Case ${CASE_NR}`) {
     CASE_NR++;

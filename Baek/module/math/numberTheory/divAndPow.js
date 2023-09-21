@@ -17,11 +17,12 @@ function divAndPow(a, b, p) {
 }
 
 /**
- * @param {BigInt} a 
- * @param {BigInt} b 
- * @param {BigInt} p
+ * @param {bigint} a 
+ * @param {bigint} b 
+ * @param {bigint} p
 */
 function divAndPow(a, b, p) {
+  if (b === 0n) return 1n;
   let out = 1n;
   let curMul = a;
   const loopCount = BigInt(Math.ceil(Math.log2(Number(b))) + 1);

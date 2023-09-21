@@ -13,7 +13,7 @@ if (!isDev) {
     CASE_NR++;
     const startTime = new Date().getTime();
     const startMemory = !isWeb ? process.memoryUsage().heapUsed / 1024 : 0;
-    const out = solve(input).toString();
+    const out = solve(input).toString().trim();
     const timeDeltaStr = (new Date().getTime() - startTime).toString();
     const timeDeltaZeroStr = " "+"0".repeat(6 - timeDeltaStr.length);
     const memoryDelta = ((!isWeb ? process.memoryUsage().heapUsed / 1024 : 0) - startMemory).toFixed(0);

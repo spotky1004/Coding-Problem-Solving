@@ -14,8 +14,35 @@ function gcd(a, b) {
  * @returns {[x: bigint, y: bigint]?} 
  */
 function exGcd(a, b, n) {
-  const aModGcd = gcd(a, n);
-  if (b % aModGcd !== 0n) return null;
+  if (a > b) {
+    const value = exGcd(b, a, n);
+    if (!value) return null;
+    let [y, x] = value;
+    if (b !== 0n) {
+      let t = -x / b;
+      if (t > 0n) t++;
+      x += b * t;
+      y -= a * t;
+    }
+    return [x, y];
+  }
+
+  if (a === 0n && b === 0n) {
+    if (n === 0n) return [0n, 0n];
+    return null;
+  }
+  if (a === 0n) {
+    if (gcd(b, n) !== b) return null;
+    return [0n, n / b];
+  }
+  if (b === 0n) {
+    if (gcd(a, n) !== a) return null;
+    return [n / a, 0n];
+  }
+  if (n === 0n) return [0n, 0n];
+
+  const aModGcd = gcd(a, b);
+  if (n % aModGcd !== 0n) return null;
   
   a /= aModGcd;
   b /= aModGcd;
@@ -23,7 +50,8 @@ function exGcd(a, b, n) {
   let [xp, yp] = exGcdImpl(a, b);
   let x = xp * n;
   let y = yp * n;
-  const t = -x / b + 1n;
+  let t = -x / b;
+  if (t > 0n) t++;
   x += b * t;
   y -= a * t;
   return [x, y];
@@ -38,11 +66,7 @@ function exGcdImpl(a, b) {
   if (a < b) return exGcdImpl(b, a);
   const r = a % b;
   const q = (a - r) / b;
-  if (r === 0n) return [0n, 1n];
-  const [xp, yp] = exGcdImpl(b, r);
+  if (r === 0n) return [1n, 0n];
+  const [yp, xp] = exGcdImpl(b, r);
   return [xp - q * yp, yp];
 }
-
-const [a, b, n] = [1n, 1n, 1n];
-const [x, y] = exGcd(a, b, n);
-console.log(`${a}x + ${b}y = ${n} -> x = ${x}, y = ${y}`);

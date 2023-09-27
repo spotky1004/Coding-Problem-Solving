@@ -1,12 +1,4 @@
 /**
- * @param {bigint} a 
- * @param {bigint} b 
-*/
-function gcd(a, b) {
-  return b ? gcd(b, a%b) : a;
-}
-
-/**
  * Solves "ax + by = n"
  * @param {bigint} a 
  * @param {bigint} b 

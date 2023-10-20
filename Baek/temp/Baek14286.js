@@ -27,63 +27,30 @@ if (!isDev) {
   }
 
 // cases
-check(`3 2
-0 1
-1 2`,
-`1`);
-check(`4 4
-0 1
-1 3
-0 2
-2 3`,
-`10`);
-check(`3 1
-0 1`,
-`0`);
-check(`5 0`,
-`0`);
-check(`6 9
-1 3
-1 2
-2 3
-0 1
-4 5
-3 5
-0 2
-1 4
-4 3`,
-`39`);
-check(`3 3
-0 2
-0 1
-1 2`,
-`4`);
-check(`3 3
-0 2
-0 1
-1 2`,
-`4`);
-check(`4 4
-0 1
-0 3
-0 2
-2 3
-1 2`,
-`13`);
-check(`4 4
-0 1
-0 3
-2 3
-0 2
-1 2`,
-`12`);
-check(`4 4
-0 1
-2 3
-0 2
-0 3
-1 2`,
-`30`);
+check(`8 9
+1 2 3
+1 3 2
+1 4 4
+2 5 2
+3 6 1
+4 7 3
+5 8 6
+6 8 2
+7 8 7
+1 8`,
+`6`);
+check(`8 9
+2 1 3
+3 1 2
+4 1 4
+5 2 2
+6 3 1
+7 4 3
+8 5 6
+8 6 2
+8 7 7
+1 8`,
+`6`);
 }
 
 /**
@@ -91,10 +58,11 @@ check(`4 4
  */
 function solve(input) {
 // input
-const [[N, M], ...edges] = input
+const [[n, m], ...edges] = input
   .trim()
   .split("\n")
   .map(line => line.split(" ").map(Number));
+const [s, t] = edges.pop();
 
 // code
 /**
@@ -105,8 +73,8 @@ const [[N, M], ...edges] = input
 function maximumFlow(c, source, sink) {
   const N = c.length;
   /** @type {number[][]} flow */
-  const f = Array.from({ length: N }, _ => Array(N).fill(0n));
-  let maxFlowSum = 0n;
+  const f = Array.from({ length: N }, _ => Array(N).fill(0));
+  let maxFlowSum = 0;
 
   while (true) {
     const parents = Array(N).fill(-1);
@@ -116,7 +84,7 @@ function maximumFlow(c, source, sink) {
         if (node === to) continue;
         if (
           parents[to] === -1 &&
-          c[node][to] - f[node][to] > 0n
+          c[node][to] - f[node][to] > 0
         ) {
           queue.push(to);
           parents[to] = node;
@@ -128,17 +96,11 @@ function maximumFlow(c, source, sink) {
 
     if (parents[sink] === -1) break;
 
-    let maxFlow = null;
+    let maxFlow = Infinity;
     for (let node = sink; node !== source; node = parents[node]) {
-      const curFlow = c[parents[node]][node] - f[parents[node]][node];
-      if (maxFlow === null) {
-        maxFlow = curFlow;
-        continue;
-      }
-      if (maxFlow < curFlow) continue;
-      maxFlow = curFlow;
+      maxFlow = Math.min(maxFlow, c[parents[node]][node] - f[parents[node]][node]);
     }
-    if (maxFlow === 0n) break;
+    if (maxFlow === 0) break;
     maxFlowSum += maxFlow;
 
     for (let node = sink; node !== source; node = parents[node]) {
@@ -152,16 +114,12 @@ function maximumFlow(c, source, sink) {
 
 
 
-const p = 1_000_000_007n;
-
-const capacities = Array.from({ length: N }, _ => Array(N).fill(0n));
-let cap = 1n;
-for (const [a, b] of edges) {
-  capacities[a][b] += cap;
-  capacities[b][a] += cap;
-  cap *= 3n;
+const capacity = Array.from({ length: n }, _ => Array(n).fill(0));
+for (const [a, b, c] of edges) {
+  capacity[a - 1][b - 1] = c;
+  capacity[b - 1][a - 1] = c;
 }
 
 // output
-return maximumFlow(capacities, N - 1, 0) % p;
+return maximumFlow(capacity, s - 1, t - 1);
 }

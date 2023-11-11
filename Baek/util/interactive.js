@@ -17,7 +17,7 @@ async function solve(input) {
     .map(line => line.split(" ").map(Number));
 
   // code
-  await interactive(`? question`);
+  const x = await interactive(`? question`);
 
   // end
   process.exit(0);

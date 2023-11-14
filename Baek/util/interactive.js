@@ -51,7 +51,8 @@ const interactive = (() => {
       waitingInteractive = true;
       promiseResolve = resolve;
     });
-    process.stdout.write("\n" + output + "\n", () => { /** flush */ });
+    process.stdout.write(output);
+    process.stdout.write("\n", () => { /** flush */ });
     return await question;
   }
 })();

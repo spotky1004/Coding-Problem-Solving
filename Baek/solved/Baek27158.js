@@ -302,13 +302,15 @@ for (let i = 0; i < avaiablePoses.length; i++) {
   posComp.set(key, i);
 }
 
-let rawSets = [];
+const sets = [];
 const setSize = 60 + 12;
 for (let i = 0; i < shapes.length; i++) {
   const variants = [];
   let cur = shapes[i];
   for (let j = 0; j < 8; j++) {
-    variants.push(cur);
+    if (!variants.some(s => isSameShape(s, cur))) {
+      variants.push(cur);
+    }
 
     cur = rotateShape(cur);
     if (j === 3) cur = flipShape(cur);
@@ -316,6 +318,7 @@ for (let i = 0; i < shapes.length; i++) {
 
   for (const shape of variants) {
     const [w, h] = getMatData(shape);
+    const seenSets = new Set();
 
     for (const [x, y] of avaiablePoses) {
       for (let xOff = 0; xOff < w; xOff++) {
@@ -334,20 +337,14 @@ for (let i = 0; i < shapes.length; i++) {
           }
           set[60 + i] = 1;
 
-          rawSets.push(set);
+          const setBin = set.reduce((a, b, i) => a + BigInt(b) * 2n**BigInt(i), 0n);
+          if (seenSets.has(setBin)) continue;
+          sets.push(set);
+          seenSets.add(setBin);
         }
       }
     }
   }
-}
-
-const sets = [];
-const setStrs = new Set();
-for (const set of rawSets) {
-  const setStr = set.join("");
-  if (setStrs.has(setStr)) continue;
-  sets.push(set);
-  setStrs.add(setStr);
 }
 
 function dlx(sets) {

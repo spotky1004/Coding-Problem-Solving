@@ -6,6 +6,70 @@ function gcd(a, b) {
   return b ? gcd(b, a%b) : a;
 }
 
+/**
+ * Solves "ax + by = n"
+ * @param {bigint} a 
+ * @param {bigint} b 
+ * @param {bigint} n 
+ * @returns {[x: bigint, y: bigint]?} 
+ */
+function exGcd(a, b, n) {
+  if (a > b) {
+    const value = exGcd(b, a, n);
+    if (!value) return null;
+    let [y, x] = value;
+    if (b !== 0n) {
+      let t = -x / b;
+      if (t > 0n) t++;
+      x += b * t;
+      y -= a * t;
+    }
+    return [x, y];
+  }
+
+  if (a === 0n && b === 0n) {
+    if (n === 0n) return [0n, 0n];
+    return null;
+  }
+  if (a === 0n) {
+    if (gcd(b, n) !== b) return null;
+    return [0n, n / b];
+  }
+  if (b === 0n) {
+    if (gcd(a, n) !== a) return null;
+    return [n / a, 0n];
+  }
+  if (n === 0n) return [0n, 0n];
+
+  const aModGcd = gcd(a, b);
+  if (n % aModGcd !== 0n) return null;
+  
+  a /= aModGcd;
+  b /= aModGcd;
+  n /= aModGcd;
+  let [xp, yp] = exGcdImpl(a, b);
+  let x = xp * n;
+  let y = yp * n;
+  let t = -x / b;
+  if (t > 0n) t++;
+  x += b * t;
+  y -= a * t;
+  return [x, y];
+}
+
+/**
+ * @param {bigint} a 
+ * @param {bigint} b 
+ * @returns {[x: bigint, y: bigint]} 
+ */
+function exGcdImpl(a, b) {
+  if (a < b) return exGcdImpl(b, a);
+  const r = a % b;
+  const q = (a - r) / b;
+  if (r === 0n) return [1n, 0n];
+  const [yp, xp] = exGcdImpl(b, r);
+  return [xp - q * yp, yp];
+}
 
 /**
  * @param {bigint} a 
@@ -157,16 +221,19 @@ function findPrimitiveRoot(n, phiN) {
  * @param {bigint} n 
  */
 function genLogSolver(n) {
+  const isNPrime = isPrime(n);
   const phiN = eularPhi(n, primeFactorization(n));
   const g = findPrimitiveRoot(n, phiN);
 
   const sqrtPhiN = BigInt(Math.ceil(Math.sqrt(Number(phiN))));
 
+  /** @type {bigint[]} */
   const pow1 = Array(Number(sqrtPhiN));
   pow1[0] = 1n;
   for (let i = 1; i < pow1.length; i++) {
     pow1[i] = pow1[i - 1] * g % n;
   }
+  /** @type {bigint[]} */
   const pow2 = Array(Math.ceil(Number(phiN) / Number(sqrtPhiN)));
   pow2[0] = 1n;
   pow2[1] = pow1[pow1.length - 1] * g % n;
@@ -175,10 +242,11 @@ function genLogSolver(n) {
   }
   
   /**
-   * @param {bigint} h 
+   * Solves "g^? = x"
+   * @param {bigint} x 
    */
   function log(x) {
-    /** @type {Map<BigInt, BigInt>} */
+    /** @type {Map<bigint, bigint>} */
     const r = new Map();
     let t = 0n;
     for (let i = 0; i < pow1.length; i++) {
@@ -200,11 +268,31 @@ function genLogSolver(n) {
     return -1n;
   }
 
-  return [g, log];
+  /**
+   * Solves "?^r = x"
+   * @param {bigint} x 
+   * @param {bigint} r root
+   */
+  function sqrt(x, r = 2n) {
+    if (!isNPrime) return -1n;
+
+    // "?^r = x (mod n)" -> "g^(ur) = g^v (mod n)" -> "g^(ur - v) = 1 (mod n)" -> "ur = v (mod phi(n))"
+    const v = log(x);
+    const exGcdVal = exGcd(r, phiN, v);
+    if (exGcdVal === null) return -1n;
+    const [u] = exGcdVal;
+    
+    return divAndPow(g, u, n);
+  }
+
+  return { g, log, sqrt };
 }
 
 const n = 1000000007n;
 const x = 12345n;
-const [g, log] = genLogSolver(n);
+const { g, log, sqrt } = genLogSolver(n);
 const k = log(x);
+const r = 20n;
+const a = sqrt(x, r);
 console.log(`g^k ≡ x (mod n); n = ${n}, x = ${x} -> g = ${g}, k = ${k}`);
+console.log(`a^r ≡ x (mod n); n = ${n}, r = ${r}, x = ${x} -> a = ${a}`);

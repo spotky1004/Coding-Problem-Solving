@@ -6,6 +6,10 @@ class Heap {
     if (compFunc) this.compFunc = compFunc;
   }
 
+  get size() {
+    return this.tree.length - 1;
+  }
+
   first() {
     return this.tree[1];
   }

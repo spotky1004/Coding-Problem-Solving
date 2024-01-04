@@ -17,11 +17,11 @@ if (!isDev) {
   function check(input, answer, caseName=`Case ${CASE_NR}`) {
     CASE_NR++;
     const startTime = new Date().getTime();
-    const startMemory = !isWeb ? process.memoryUsage().heapUsed / 1024 : 0;
+    const startMemory = !isWeb ? process.memoryUsage().heapUsed : window.performance.memory.usedJSHeapSize;
     const out = solve(input).toString().trim();
     const timeDeltaStr = (new Date().getTime() - startTime).toString();
     const timeDeltaZeroStr = " "+"0".repeat(6 - timeDeltaStr.length);
-    const memoryDelta = ((!isWeb ? process.memoryUsage().heapUsed / 1024 : 0) - startMemory).toFixed(0);
+    const memoryDelta = (((!isWeb ? process.memoryUsage().heapUsed : window.performance.memory.usedJSHeapSize) - startMemory) / 1024).toFixed(0);
     const memoryDeltaZeroStr = " "+"0".repeat(8 - memoryDelta.length);
     if (
       typeof answer === "string" ?

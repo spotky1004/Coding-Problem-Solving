@@ -4,7 +4,12 @@ const isDev = isWeb || require("fs").existsSync("C:/users/spotky");
 if (!isDev) {
   const input = require("fs").readFileSync("/dev/stdin").toString();
   const out = solve(input);
-  console.log(out);
+  if (!isWeb) {
+    process.stdout.write(out.toString());
+    process.exit(0);
+  } else {
+    console.log(out);
+  }
 } else {
   if (!isWeb) require('node:v8').setFlagsFromString('--stack-size=65536');
 
@@ -12,11 +17,11 @@ if (!isDev) {
   function check(input, answer, caseName=`Case ${CASE_NR}`) {
     CASE_NR++;
     const startTime = new Date().getTime();
-    const startMemory = !isWeb ? process.memoryUsage().heapUsed / 1024 : 0;
+    const startMemory = !isWeb ? process.memoryUsage().heapUsed : window.performance.memory.usedJSHeapSize;
     const out = solve(input).toString().trim();
     const timeDeltaStr = (new Date().getTime() - startTime).toString();
     const timeDeltaZeroStr = " "+"0".repeat(6 - timeDeltaStr.length);
-    const memoryDelta = ((!isWeb ? process.memoryUsage().heapUsed / 1024 : 0) - startMemory).toFixed(0);
+    const memoryDelta = (((!isWeb ? process.memoryUsage().heapUsed : window.performance.memory.usedJSHeapSize) - startMemory) / 1024).toFixed(0);
     const memoryDeltaZeroStr = " "+"0".repeat(8 - memoryDelta.length);
     if (
       typeof answer === "string" ?
@@ -27,10 +32,26 @@ if (!isDev) {
   }
 
 // cases
-check(`3 6`,
-`41`);
-check(`5 5`,
-`0`);
+check(`5
+2x + 3 = 4
+124x + 20 = 160
+123456x + 7 = 2000
+0x + 2 = 3
+0x + 2 = 2`,
+`Equation 1
+x = 0.500000
+
+Equation 2
+x = 1.129032
+
+Equation 3
+x = 0.016143
+
+Equation 4
+No solution.
+
+Equation 5
+More than one solution.`);
 }
 
 /**
@@ -38,28 +59,27 @@ check(`5 5`,
  */
 function solve(input) {
 // input
-const [[N, M]] = input
+const [[N], ...eq] = input
   .trim()
-  .split("\n")
-  .map(line => line.split(" ").map(Number));
+  .split("\n");
 
 // code
-const p = 9901;
-const dp = Array(M).fill(0);
-for (let i = 1; i < M; i += 2) {
-  dp[i] = 1;
-}
-console.log(dp);
-for (let i = 1; i < N; i++) {
-  for (let j = 0; j < M; j++) {
-    let value = 0;
-    if (j !== 0) value += (dp[j] ?? 0);
-    if (i !== 0) value += dp[j];
-    dp[j] = value % p;
+const out = [];
+for (let i = 0; i < N; i++) {
+  out.push("Equation " + (i + 1));
+  const [a, , b, , c] = eq[i].split(" ").map(v => parseInt(v)).map(v => isNaN(v) ? 0 : v);
+  const r = c - b;
+  if (a === 0 && r === 0) {
+    out.push("More than one solution.");
+  } else if (a === 0) {
+    out.push("No solution.");
+  } else {
+    const x = r / a;
+    out.push(`x = ${x.toFixed(20).match(/\-?\d+\.\d{6}/)}`);
   }
-  console.log(dp);
+  out.push("");
 }
 
 // output
-return dp[M - 1];
+return out.join("\n");
 }

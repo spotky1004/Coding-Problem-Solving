@@ -4,7 +4,12 @@ const isDev = isWeb || require("fs").existsSync("C:/users/spotky");
 if (!isDev) {
   const input = require("fs").readFileSync("/dev/stdin").toString();
   const out = solve(input);
-  console.log(out);
+  if (!isWeb) {
+    process.stdout.write(out.toString());
+    process.exit(0);
+  } else {
+    console.log(out);
+  }
 } else {
   if (!isWeb) require('node:v8').setFlagsFromString('--stack-size=65536');
 
@@ -27,10 +32,17 @@ if (!isDev) {
   }
 
 // cases
-check(`3 6`,
-`41`);
-check(`5 5`,
-`0`);
+check(`5
+2 6 3
+7 9 8
+-1 0 0
+4 8 4
+5 5 5`,
+`2.1666666667
+2
+1.5
+2.4444444444
+1`);
 }
 
 /**
@@ -38,28 +50,48 @@ check(`5 5`,
  */
 function solve(input) {
 // input
-const [[N, M]] = input
+const [[N], ...games] = input
   .trim()
   .split("\n")
   .map(line => line.split(" ").map(Number));
 
 // code
-const p = 9901;
-const dp = Array(M).fill(0);
-for (let i = 1; i < M; i += 2) {
-  dp[i] = 1;
-}
-console.log(dp);
-for (let i = 1; i < N; i++) {
-  for (let j = 0; j < M; j++) {
-    let value = 0;
-    if (j !== 0) value += (dp[j] ?? 0);
-    if (i !== 0) value += dp[j];
-    dp[j] = value % p;
+const out = [];
+for (const [x, y, k] of games) {
+  const dp = new Map();
+  function search(a, b, depth = 0) {
+    const key = a + " " + b;
+    console.log(a, b, depth);
+    if (dp.has(key)) return dp.get(key);
+    
+    const l = Math.max(a, Math.ceil((a + b) / 2 - 1));
+    const r = Math.min(b, Math.floor((a + b) / 2 + 1));
+    const rangeLen = r - l + 1;
+    console.log(l, r);
+
+    let exSum = 0;
+    for (let i = l; i <= r; i++) {
+      console.log(i);
+      let ex;
+      if (i === k) {
+        ex = depth + 1;
+      } else if (i > k) {
+        ex = depth + search(a, i - 1, depth + 1);
+      } else {
+        ex = depth + search(i + 1, b, depth + 1);
+      }
+
+      exSum += ex / rangeLen;
+    }
+
+    dp.set(key, exSum);
+    return dp.get(key);
   }
+  
+  out.push(search(x, y));
   console.log(dp);
 }
 
 // output
-return dp[M - 1];
+return out.join("\n");
 }

@@ -4,7 +4,12 @@ const isDev = isWeb || require("fs").existsSync("C:/users/spotky");
 if (!isDev) {
   const input = require("fs").readFileSync("/dev/stdin").toString();
   const out = solve(input);
-  console.log(out);
+  if (!isWeb) {
+    process.stdout.write(out.toString());
+    process.exit(0);
+  } else {
+    console.log(out);
+  }
 } else {
   if (!isWeb) require('node:v8').setFlagsFromString('--stack-size=65536');
 
@@ -27,10 +32,12 @@ if (!isDev) {
   }
 
 // cases
-check(`3 6`,
-`41`);
-check(`5 5`,
-`0`);
+check(`4
+0 10 15 20
+5 0 9 10
+6 13 0 12
+8 8 9 0`,
+`35`);
 }
 
 /**
@@ -38,28 +45,38 @@ check(`5 5`,
  */
 function solve(input) {
 // input
-const [[N, M]] = input
+const [[N], ...table] = input
   .trim()
   .split("\n")
   .map(line => line.split(" ").map(Number));
 
 // code
-const p = 9901;
-const dp = Array(M).fill(0);
-for (let i = 1; i < M; i += 2) {
-  dp[i] = 1;
-}
-console.log(dp);
-for (let i = 1; i < N; i++) {
-  for (let j = 0; j < M; j++) {
-    let value = 0;
-    if (j !== 0) value += (dp[j] ?? 0);
-    if (i !== 0) value += dp[j];
-    dp[j] = value % p;
+const dp = Array.from({ length: N }, _ => Array(1 << N).fill(Infinity));
+for (let i = 0; i < N; i++) dp[i][0] = 0;
+
+const queue = Array.from({ length: N }, (_, i) => [i, 0]);
+for (const [pos, mask] of queue) {
+  for (let i = 0; i < N; i++) {
+    const bit = 1 << i;
+    if (
+      (mask & bit) !== 0 ||
+      pos === mask ||
+      
+    ) continue;
+
+    const newMask = mask | bit;
+    if (!isFinite(dp[i][newMask])) queue.push([i, newMask]);
+    dp[i][newMask] = Math.min(dp[i][newMask], dp[pos][mask] + table[pos][i]);
   }
-  console.log(dp);
+}
+
+console.log(dp);
+
+let minCost = Infinity;
+for (let i = 0; i < N; i++) {
+  minCost = Math.min(minCost, dp[i][(1 << N) - 1]);
 }
 
 // output
-return dp[M - 1];
+return minCost;
 }

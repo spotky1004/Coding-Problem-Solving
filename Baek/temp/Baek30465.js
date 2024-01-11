@@ -4,7 +4,12 @@ const isDev = isWeb || require("fs").existsSync("C:/users/spotky");
 if (!isDev) {
   const input = require("fs").readFileSync("/dev/stdin").toString();
   const out = solve(input);
-  console.log(out);
+  if (!isWeb) {
+    process.stdout.write(out.toString());
+    process.exit(0);
+  } else {
+    console.log(out);
+  }
 } else {
   if (!isWeb) require('node:v8').setFlagsFromString('--stack-size=65536');
 
@@ -27,10 +32,21 @@ if (!isDev) {
   }
 
 // cases
-check(`3 6`,
-`41`);
-check(`5 5`,
-`0`);
+check(`4
+1 3 2 4`,
+`1`);
+check(`5
+1 2 4 3 5`,
+`-1`);
+check(`4
+4 3 2 1`,
+`2`);
+check(`8
+8 7 6 4 2 3 5 1`,
+`4`);
+check(`11
+11 3 4 2 10 6 7 8 5 1 9`,
+`8`);
 }
 
 /**
@@ -38,28 +54,48 @@ check(`5 5`,
  */
 function solve(input) {
 // input
-const [[N, M]] = input
+const [[N], A] = input
   .trim()
   .split("\n")
   .map(line => line.split(" ").map(Number));
 
 // code
-const p = 9901;
-const dp = Array(M).fill(0);
-for (let i = 1; i < M; i += 2) {
-  dp[i] = 1;
+if (N % 2 === 1) {
+  const center = (N - 1) / 2 + 1;
+  if (A[center - 1] !== center) return -1;
 }
-console.log(dp);
-for (let i = 1; i < N; i++) {
-  for (let j = 0; j < M; j++) {
-    let value = 0;
-    if (j !== 0) value += (dp[j] ?? 0);
-    if (i !== 0) value += dp[j];
-    dp[j] = value % p;
+
+const rStart = Math.ceil(N) / 2 + 1;
+let count = 0;
+const visited = Array(N + 1).fill(false);
+visited[0] = true;
+for (let i = 0; i < N; i++) {
+  const start = A[i];
+  if (visited[start]) continue;
+  visited[i + 1] = true;
+
+  const q = [start];
+  let cur = start;
+  let len = 1;
+  while (true) {
+    const next = A[cur - 1];
+    if (
+      !(
+        (cur < rStart && rStart <= next) ||
+        (next < rStart && rStart <= cur)
+      ) ||
+      start === next ||
+      visited[next]
+    ) break;
+    cur = next;
+    visited[cur] = true;
+    q.push(cur);
+    len++;
   }
-  console.log(dp);
+
+  count += len - 1;
 }
 
 // output
-return dp[M - 1];
+return count;
 }

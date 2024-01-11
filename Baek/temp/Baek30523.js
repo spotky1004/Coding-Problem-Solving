@@ -4,7 +4,12 @@ const isDev = isWeb || require("fs").existsSync("C:/users/spotky");
 if (!isDev) {
   const input = require("fs").readFileSync("/dev/stdin").toString();
   const out = solve(input);
-  console.log(out);
+  if (!isWeb) {
+    process.stdout.write(out.toString());
+    process.exit(0);
+  } else {
+    console.log(out);
+  }
 } else {
   if (!isWeb) require('node:v8').setFlagsFromString('--stack-size=65536');
 
@@ -27,10 +32,14 @@ if (!isDev) {
   }
 
 // cases
-check(`3 6`,
-`41`);
-check(`5 5`,
-`0`);
+check(`4 8
+4 6 1 3
+5 4 1 7`,
+`86`);
+check(`9 29
+10 7 1 8 0 7 5 5 4
+14 8 8 12 1 4 11 6 0`,
+`791`);
 }
 
 /**
@@ -38,28 +47,50 @@ check(`5 5`,
  */
 function solve(input) {
 // input
-const [[N, M]] = input
+const [[N, p], A, B] = input
   .trim()
   .split("\n")
   .map(line => line.split(" ").map(Number));
 
 // code
-const p = 9901;
-const dp = Array(M).fill(0);
-for (let i = 1; i < M; i += 2) {
-  dp[i] = 1;
-}
-console.log(dp);
-for (let i = 1; i < N; i++) {
-  for (let j = 0; j < M; j++) {
-    let value = 0;
-    if (j !== 0) value += (dp[j] ?? 0);
-    if (i !== 0) value += dp[j];
-    dp[j] = value % p;
+/**
+ * @param {number[]} arr 
+ * @returns {number[]} 
+ */
+function SOSdp(arr) {
+  const bitLen = Math.ceil(Math.log2(arr.length));
+  const maxNum = 2**bitLen;
+  
+  const out = [...arr, ...Array(maxNum - arr.length).fill(0)];
+  for (let i = 0; i < bitLen; i++) {
+    const iMask = 1 << i;
+    for (let j = 0; j < maxNum; j++) {
+      if ((j & iMask) === 0) continue;
+      out[j] += out[j^iMask];
+    }
   }
-  console.log(dp);
+  
+  return out;
 }
 
+
+
+const MAX_NUM = (1 << 17) - 1;
+const aCounts = Array(MAX_NUM + 1).fill(0);
+const bCounts = Array(MAX_NUM + 1).fill(0);
+
+for (const Ai of A) aCounts[Ai]++;
+for (const Bi of B) bCounts[Bi]++;
+
+const aSOSDp = SOSdp(aCounts);
+const bSOSDp = SOSdp(bCounts);
+
+const extraScoreCounts = Array(MAX_NUM + 1).fill(0);
+for (let i = 0; i <= MAX_NUM; i++) {
+  extraScoreCounts[i] = (N - aSOSDp[MAX_NUM ^ i]) - (N - bSOSDp[MAX_NUM ^ i]);
+}
+console.log(extraScoreCounts);
+
 // output
-return dp[M - 1];
+return "answer";
 }

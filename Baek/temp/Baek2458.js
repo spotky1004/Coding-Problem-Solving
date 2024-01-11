@@ -27,10 +27,47 @@ if (!isDev) {
   }
 
 // cases
-check(`3 6`,
-`41`);
-check(`5 5`,
-`0`);
+check(`6 6
+1 5
+3 4
+5 4
+4 2
+4 6
+5 2`,
+`1`);
+// check(`5 5
+// 1 5
+// 3 4
+// 5 4
+// 4 2
+// 5 2`,
+// `2`);
+// check(`6 7
+// 1 3
+// 1 5
+// 3 4
+// 5 4
+// 4 2
+// 4 6
+// 5 2`,
+// `2`);
+// check(`6 3
+// 1 2
+// 2 3
+// 4 5`,
+// `0`);
+// check(`6 3
+// 6 5
+// 5 4
+// 4 3`,
+// `0`);
+// check(`6 5
+// 6 5
+// 5 4
+// 4 3
+// 3 2
+// 1 2`,
+// `1`);
 }
 
 /**
@@ -38,28 +75,42 @@ check(`5 5`,
  */
 function solve(input) {
 // input
-const [[N, M]] = input
+const [[N, M], ...edges] = input
   .trim()
   .split("\n")
   .map(line => line.split(" ").map(Number));
 
 // code
-const p = 9901;
-const dp = Array(M).fill(0);
-for (let i = 1; i < M; i += 2) {
-  dp[i] = 1;
-}
-console.log(dp);
-for (let i = 1; i < N; i++) {
-  for (let j = 0; j < M; j++) {
-    let value = 0;
-    if (j !== 0) value += (dp[j] ?? 0);
-    if (i !== 0) value += dp[j];
-    dp[j] = value % p;
+/**
+ * @param {number} V 
+ * @param {number[][]} costs 
+ */
+function floydWarshall(costs) {
+  const V = costs.length;
+
+  for (let k = 0; k < V; k++) {
+    for (let i = 0; i < V; i++) {
+      for (let j = 0; j < V; j++) {
+        costs[i][j] = Math.min(costs[i][j], costs[i][k] + costs[k][j]);
+      }
+    }
+    console.table(costs);
   }
-  console.log(dp);
 }
 
+const costs = Array.from({ length: N }, _ => Array(N).fill(Infinity));
+for (let i = 0; i < N; i++) {
+  costs[i][i] = 0;
+}
+for (const [a, b] of edges) {
+  costs[a - 1][b - 1] = 1;
+  costs[b - 1][a - 1] = 1;
+}
+
+console.table(costs);
+void floydWarshall(costs);
+console.table(costs);
+
 // output
-return dp[M - 1];
+return 0;
 }

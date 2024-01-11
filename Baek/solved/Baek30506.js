@@ -8,6 +8,39 @@ function interactiveInput(input) {
   return winCount;
 }
 
+const interactiveJudger = {
+  /** @type {(number | string)[]} */
+  inputs: [
+    "3"
+  ],
+  /**
+   * @typedef InteractiveResult 
+   * @prop {boolean} score 
+   */
+  /** 
+   * @param {string} input 
+   * @returns {InteractiveResult} 
+   */
+  interactive: function (input) {
+    /** @type {string} */
+    let output = "";
+    let count = 0;
+    output = yield input;
+
+    while (true) {
+      const newInput = [];
+
+      output = yield ;
+
+      count++;
+    }
+
+    return {
+
+    }
+  }
+};
+
 /** @param {string} input */
 async function solve(input) {
   // input

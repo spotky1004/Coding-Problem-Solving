@@ -1,3 +1,29 @@
+const isWeb = typeof window === "object";
+const isDev = isWeb || require("fs").existsSync("C:/users/spotky");
+
+const interactiveTestDatas = [
+  {
+    input: "0"
+  }
+];
+
+/** @type {(data: (typeof interactiveTestDatas)[number]) => Promise<JudgeResult>} */
+async function interactiveJudger(data) {
+  const { input } = data;
+
+  solve(input);
+
+  const [, received] = (await interactiveReceiver()).split(" ");
+  interactiveSender("1");
+
+  const score = Number(received);
+
+  return {
+    type: "AC",
+    score
+  }
+}
+
 /** @param {string} input */
 function interactiveInput(input) {
   const [[x]] = input
@@ -17,14 +43,15 @@ async function solve(input) {
     .map(line => line.split(" ").map(Number));
 
   // code
-  const x = await interactive(`? question`);
+  const x = await interactive(`? 1004`);
 
   // end
   process.exit(0);
 }
 
 // Interactive
-const interactive = (() => {
+/** @type {[(output: string) => Promise<ReturnType<interactiveInput>>, () => Promise<string>, (input: string) => void]} */
+const [interactive, interactiveReceiver, interactiveSender] = !isDev ? (() => {
   let promiseResolve;
   let waitingInput = true;
   let waitingInteractive = false;
@@ -45,7 +72,7 @@ const interactive = (() => {
   });
 
   /** @type {(output: string) => Promise<ReturnType<interactiveInput>>} */
-  return async function (output) {
+  async function interactive(output) {
     /** @type {Promise<ReturnType<interactiveInput>>} */
     const question = new Promise((resolve) => {
       waitingInteractive = true;
@@ -55,4 +82,70 @@ const interactive = (() => {
     process.stdout.write("\n", () => { /** flush */ });
     return await question;
   }
+
+  return [interactive, null, null];
+})() : (() => {
+  let receivedOutput = null;
+  let interactiveResolve = null;
+
+  /** @type {(output: string) => Promise<ReturnType<interactiveInput>>} */
+  async function interactive(output) {
+    console.log("\x1b[44m%s\x1b[0m", ` <- Receive    `, `${output}`);
+    receivedOutput = output;
+
+    const answer = await new Promise((resolve) => {
+      interactiveResolve = resolve;
+    });
+    console.log("\x1b[45m%s\x1b[0m\x1b[90m%s\x1b[0m", `     Send   -> `, ` ${answer}`);
+
+    return await new Promise((resolve) => resolve(answer));
+  }
+
+  /** @type {() => string} */
+  function interactiveReceiver() {
+    return receivedOutput;
+  }
+
+  /** @type {(input: string) => void} */
+  function interactiveSender(input) {
+    interactiveResolve(input);
+  }
+
+  return [interactive, interactiveReceiver, interactiveSender];
 })();
+
+/**
+ * @typedef JudgeResult
+ * @prop {"AC" | "PAC" | "WA"} type 
+ * @prop {number?} score 
+ */
+
+if (isDev) {
+  async function judge() {
+    if (!isWeb) require('node:v8').setFlagsFromString('--stack-size=65536');
+  
+    let CASE_NR = 0;
+    for (const data of interactiveTestDatas) {
+      CASE_NR++;
+      const startTime = new Date().getTime();
+      const startMemory = !isWeb ? process.memoryUsage().heapUsed : window.performance.memory.usedJSHeapSize;
+  
+      const result = await interactiveJudger(data);
+  
+      const timeDeltaStr = (new Date().getTime() - startTime).toString();
+      const timeDeltaZeroStr = " "+"0".repeat(6 - timeDeltaStr.length);
+      const memoryDelta = (((!isWeb ? process.memoryUsage().heapUsed : window.performance.memory.usedJSHeapSize) - startMemory) / 1024).toFixed(0);
+      const memoryDeltaZeroStr = " "+"0".repeat(8 - memoryDelta.length);
+  
+      const displayScore = typeof result.score !== "undefined";
+      const scoreStr = result.score.toString().padStart("10", " ");
+  
+      if (result.type === "AC") console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[0m", `Case ${CASE_NR}: `, ` ${displayScore ? scoreStr + " pt" : "AC"} `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
+      else if (result.type === "PAC") console.log("\x1b[1m%s\x1b[43m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[0m", `Case ${CASE_NR}: `, ` ${displayScore ? scoreStr + " pt" : "AC"} `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
+      else if (result.type === "WA") console.log("\x1b[1m%s\x1b[41m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[31m%s\x1b[0m", `Case ${CASE_NR}: `, ` ${displayScore ? scoreStr + " pt" : "WA"} `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB\n", out.slice(0, 10000));
+    }
+  }
+
+  judge();
+}
+

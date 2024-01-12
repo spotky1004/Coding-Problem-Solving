@@ -13,8 +13,8 @@ async function interactiveJudger(data) {
 
   solve(input);
 
-  const [, received] = (await interactiveReceiver()).split(" ");
-  interactiveSender("1");
+  const [, received] = interactiveReceiver().split(" ");
+  await interactiveSender("1");
 
   const score = Number(received);
 
@@ -46,11 +46,11 @@ async function solve(input) {
   const x = await interactive(`? 1004`);
 
   // end
-  process.exit(0);
+  if (!isDev) process.exit(0);
 }
 
 // Interactive
-/** @type {[(output: string) => Promise<ReturnType<interactiveInput>>, () => Promise<string>, (input: string) => void]} */
+/** @type {[(output: string) => Promise<ReturnType<interactiveInput>>, () => string, (input: string) => Promise<void>}]} */
 const [interactive, interactiveReceiver, interactiveSender] = !isDev ? (() => {
   let promiseResolve;
   let waitingInput = true;
@@ -90,25 +90,34 @@ const [interactive, interactiveReceiver, interactiveSender] = !isDev ? (() => {
 
   /** @type {(output: string) => Promise<ReturnType<interactiveInput>>} */
   async function interactive(output) {
-    console.log("\x1b[44m%s\x1b[0m", ` <- Receive    `, `${output}`);
-    receivedOutput = output;
+    receivedOutput = output.toString();
+    console.log("\x1b[35m%s\x1b[0m", `<-`, `${output}`);
 
     const answer = await new Promise((resolve) => {
       interactiveResolve = resolve;
     });
-    console.log("\x1b[45m%s\x1b[0m\x1b[90m%s\x1b[0m", `     Send   -> `, ` ${answer}`);
+    console.log("\x1b[34m%s\x1b[0m\x1b[90m%s\x1b[0m", `->`, ` ${answer}`);
 
     return await new Promise((resolve) => resolve(answer));
   }
 
   /** @type {() => string} */
   function interactiveReceiver() {
-    return receivedOutput;
+    const output = receivedOutput;
+    receivedOutput = null;
+    return output;
   }
 
-  /** @type {(input: string) => void} */
-  function interactiveSender(input) {
+  /** @type {(input: string) => Promise<void>} */
+  async function interactiveSender(input) {
     interactiveResolve(input);
+    await new Promise((resolve) => {
+      const intervalID = setInterval(() => {
+        if (receivedOutput === null) return;
+        clearInterval(intervalID);
+        resolve();
+      });
+    });
   }
 
   return [interactive, interactiveReceiver, interactiveSender];
@@ -138,14 +147,18 @@ if (isDev) {
       const memoryDeltaZeroStr = " "+"0".repeat(8 - memoryDelta.length);
   
       const displayScore = typeof result.score !== "undefined";
-      const scoreStr = result.score.toString().padStart("10", " ");
+      const scoreStr = (result.score ?? 0).toString().padStart("10", " ");
   
       if (result.type === "AC") console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[0m", `Case ${CASE_NR}: `, ` ${displayScore ? scoreStr + " pt" : "AC"} `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
       else if (result.type === "PAC") console.log("\x1b[1m%s\x1b[43m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[0m", `Case ${CASE_NR}: `, ` ${displayScore ? scoreStr + " pt" : "AC"} `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
-      else if (result.type === "WA") console.log("\x1b[1m%s\x1b[41m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[31m%s\x1b[0m", `Case ${CASE_NR}: `, ` ${displayScore ? scoreStr + " pt" : "WA"} `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB\n", out.slice(0, 10000));
+      else if (result.type === "WA") console.log("\x1b[1m%s\x1b[41m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m", `Case ${CASE_NR}: `, ` ${displayScore ? scoreStr + " pt" : "WA"} `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
     }
   }
 
+  const ogSolve = solve;
+  solve = (input) => {
+    console.log("\x1b[34m%s\x1b[0m\x1b[90m%s\x1b[0m", `->`, ` ${input}`);
+    ogSolve(input);
+  }
   judge();
 }
-

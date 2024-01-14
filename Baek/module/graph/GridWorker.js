@@ -85,7 +85,7 @@ class GridWorker {
 
   /**
    * @template {2 | 3} Dim 
-   * @template {any[]} Finds 
+   * @template {(number | string)[]} Finds 
    * @param {Dim} dim 
    * @param {Dim extends 2 ? Arr2D<any> : Arr3D<any>} gird 
    * @param {Finds} toFinds 

@@ -9,8 +9,8 @@ function floydWarshall(V, edges) {
     costs[i][i] = 0;
   }
   for (const [a, b, cost] of edges) {
-    costs[a - 1][b - 1] = cost;
-    costs[b - 1][a - 1] = cost;
+    costs[a][b] = cost;
+    costs[b][a] = cost;
   }
 
   for (let k = 0; k < V; k++) {

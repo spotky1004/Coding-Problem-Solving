@@ -8,7 +8,7 @@ function dijkstra(nodeCount, startNode) {
   while (heap.size > 0) {
     const [nodeNr, cost] = heap.pop();
     if (costs[nodeNr] < cost) continue;
-    const node = connections[nodeNr];
+    const node = adj[nodeNr];
     for (const [curNr, curCost] of node) {
       if (costs[curNr] < cost + curCost) continue;
       costs[curNr] = cost + curCost;

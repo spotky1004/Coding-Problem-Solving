@@ -58,47 +58,32 @@ const [[N, M, K], A, ...edges] = input
   .map(line => line.split(" ").map(BigInt));
 
 // code
+const inf = 10n**30n;
+const min = (a, b) => a > b ? b : a;
+
 let B = [];
 /** @type {[vi: number, Bi: bigint][]} */
 const adj = Array.from({ length: Number(N) }, _ => []);
 for (const [ui, vi, Bi] of edges) {
-  B.push(Bi);
+  B.push([Number(ui) - 1, Bi]);
   adj[Number(ui) - 1].push([Number(vi) - 1, Bi]);
 }
-B = [...new Set(B.sort((a, b) => Number(a - b)))];
+B = [...new Set(B.sort((a, b) => Number(a[1] - b[1])))];
 adj.map(e => e.sort((a, b) => Number(a[1] - b[1])));
+const adjIdxes = Array(Number(N)).fill(-1);
 
-const logMax = Math.ceil(Math.log2(1e18));
+const logMax = Math.floor(Math.log2(1e18));
 let u = 0;
 let c = 0n;
 
 function genSparseTable() {
-  const move = [];
-  for (let i = 0; i < N; i++) {
-    const edges = adj[i];
-    let l = -1, r = edges.length;
-    while (l + 1 < r) {
-      const m = Math.floor((l + r) / 2);
-      if (edges[m][1] <= c) l = m;
-      else r = m;
-    }
-    const nextNode = (edges[l] ?? [])[0];
-    move.push(typeof nextNode !== "undefined" ? [nextNode, A[nextNode]] : [i, A[i]]);
-  }
-
-  const table = [move];
   for (let i = 1; i <= logMax; i++) {
-    const prev = table[i - 1];
-    const row = [];
-    table.push(row);
+    const prevRow = table[i - 1];
     for (let j = 0; j < N; j++) {
-      const prevCost = prev[j][1];
-      const nextNode = prev[prev[j][0]];
-      row.push([nextNode[0], prevCost + nextNode[1]]);
+      const [nextNode, costAcc] = prevRow[prevRow[j][0]];
+      table[i][j] = [nextNode, min(inf, prevRow[j][1] + costAcc)];
     }
   }
-
-  return table;
 }
 
 function tableMove(k) {
@@ -107,11 +92,11 @@ function tableMove(k) {
   let i = 0;
   let b = 1n;
 
-  while (b <= k) {
+  while (b <= k && i <= logMax) {
     if ((k & b) !== 0n) {
       const next = table[i][newU];
       newU = next[0];
-      cAdd += next[1];
+      cAdd = min(inf, cAdd + next[1]);
     }
 
     i++;
@@ -121,14 +106,27 @@ function tableMove(k) {
   return [newU, cAdd];
 }
 
-let table = genSparseTable();
+let table = Array.from({ length: logMax + 1 }, _ => Array(N).fill(null));
+for (let i = 0; i < N; i++) {
+  table[0][i] = [i, A[i]];
+}
+
 let tableGenAt = c;
 let nextBIdx = 0;
 let loopLeft = K;
 while (loopLeft > 0n) {
-  while (tableGenAt >= B[nextBIdx]) nextBIdx++;
+  while (nextBIdx < M && tableGenAt >= B[nextBIdx][1]) {
+    const changedNode = B[nextBIdx][0];
+    if (typeof changedNode !== "undefined") {
+      const edge = adj[changedNode][++adjIdxes[changedNode]];
+      const nextNode = edge[0];
+      table[0][changedNode] = [edge[0], A[nextNode]]; 
+    }
+    nextBIdx++;
+  }
+  genSparseTable();
 
-  const cDiff = (B[nextBIdx] ?? 10n**50n) - tableGenAt;
+  const cDiff = ((B[nextBIdx] ?? [])[1] ?? inf * 10n) - tableGenAt;
   let l = 0n, r = loopLeft + 1n;
   while (l + 1n < r) {
     const m = (l + r) / 2n;
@@ -137,12 +135,12 @@ while (loopLeft > 0n) {
     else r = m;
   }
   if (l !== loopLeft) l++;
-
+  
   const [newU, cAdd] = tableMove(l);
   u = newU;
-  c += cAdd;
+  c = min(inf, c + cAdd);
   loopLeft -= l;
-  table = genSparseTable();
+  genSparseTable();
   tableGenAt = c;
 }
 

@@ -3,12 +3,14 @@
  * @param {(comb: number[]) => void} callback 
  */
 function bruteSearcher(n, callback) {
-  const MAX = (1 << n) - 1;
-  for (let mask = 0; mask <= MAX; mask++) {
-    const comb = [];
-    for (let b = 0; b < n; b++) {
-      if ((1 << b) & mask) comb.push(b);
-    }
+  const comb = [];
+  function impl(i = 0) {
     callback(comb);
+    if (i >= n) return;
+    impl(i + 1);
+    comb.push(i);
+    impl(i + 1);
+    comb.pop();
   }
+  impl();
 }

@@ -2,7 +2,7 @@
  * @param {number} n 
  * @param {(comb: number[]) => void} callback 
  */
-function bruteSearcher(n, callback) {
+function combBruteSearcher(n, callback) {
   const comb = [];
   function impl(i = 0) {
     callback(comb);

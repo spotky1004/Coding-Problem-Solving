@@ -14,13 +14,15 @@ function gcd(a, b) {
  * @param {bigint} p
 */
 function divAndPow(a, b, p) {
+  if (b === 0n) return 1n;
   let out = 1n;
   let curMul = a;
-  const loopCount = BigInt(Math.ceil(Math.log2(Number(b))) + 1);
-  for (let i = 0n; i < loopCount; i++) {
-    if (b & 1n << i) {
+  let bin = 1n;
+  while (bin <= b) {
+    if (b & bin) {
       out = out*curMul % p;
     }
+    bin *= 2n;
     curMul = curMul**2n % p;
   }
   return out;

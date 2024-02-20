@@ -6,11 +6,12 @@
 function divAndPow(a, b, p) {
   let out = 1;
   let curMul = a;
-  const loopCount = Math.ceil(Math.log2(b)) + 1;
-  for (let i = 0; i < loopCount; i++) {
-    if (b & 1 << i) {
+  let bin = 1;
+  while (bin <= b) {
+    if (b & bin) {
       out = out*curMul % p;
     }
+    bin *= 2;
     curMul = curMul**2 % p;
   }
   return out;
@@ -22,14 +23,14 @@ function divAndPow(a, b, p) {
  * @param {bigint} p
 */
 function divAndPow(a, b, p) {
-  if (b === 0n) return 1n;
   let out = 1n;
   let curMul = a;
-  const loopCount = BigInt(Math.ceil(Math.log2(Number(b))) + 1);
-  for (let i = 0n; i < loopCount; i++) {
-    if (b & 1n << i) {
+  let bin = 1n;
+  while (bin <= b) {
+    if (b & bin) {
       out = out*curMul % p;
     }
+    bin *= 2n;
     curMul = curMul**2n % p;
   }
   return out;

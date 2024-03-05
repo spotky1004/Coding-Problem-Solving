@@ -66,6 +66,24 @@ check(`9
 1000021412678412681
 21`,
 `5183/36288`);
+check(`15
+12345678
+81234567
+78123456
+67812345
+56781234
+45678123
+34567812
+23456781
+12345678
+81234567
+78123456
+67812345
+56781234
+45678123
+34567812
+98`,
+`1357529/127702575`);
 }
 
 /**
@@ -78,8 +96,8 @@ const [bigN, ...nums] = input
   .split("\n")
   .map(BigInt);
 const N = Number(bigN);
-const K = nums.pop();
-const numK = Number(K);
+const bigK = nums.pop();
+const K = Number(bigK);
 
 // code
 /**
@@ -93,9 +111,9 @@ function gcd(a, b) {
 
 
 const MAX_DIGIT = 50 * N;
-const expMod = [1n];
+const expMod = [1];
 for (let i = 1; i <= MAX_DIGIT; i++) {
-  expMod[i] = expMod[i - 1] * 10n % K;
+  expMod[i] = expMod[i - 1] * 10 % K;
 }
 
 const numDigits = Array(N).fill(-1);
@@ -111,35 +129,44 @@ for (let i = 0; i < bitDigits.length; i++) {
   bitDigits[i] = digit;
 }
 
+const numMods = [];
+for (let i = 0; i < N; i++) {
+  numMods.push(Number(nums[i] % bigK));
+}
+
 const dp = Array(1 << N).fill(null);
 for (let i = 0; i < N; i++) {
   const key = 1 << i;
-  dp[key] = Array(numK).fill(0);
-  dp[key][nums[i] % K]++;
+  dp[key] = Array(K).fill(0);
+  dp[key][numMods[i] % K]++;
+}
+
+const bits = [];
+for (let i = 0; i < N; i++) {
+  bits.push(1 << i);
 }
 
 for (let mask = 0; mask < dp.length; mask++) {
   if (dp[mask] !== null) continue;
 
-  const curDp = Array(numK).fill(0);
+  const curDp = Array(K).fill(0);
   dp[mask] = curDp;
   for (let b = 0; b < N; b++) {
-    const bit = 1 << b;
-    if ((mask & bit) === 0) continue;
+    const bit = bits[b];
+    if (!(mask & bit)) continue;
 
-    const num = nums[b];
+    const num = numMods[b];
     const subKey = mask ^ bit;
-    const subDigit = bitDigits[subKey];
+    const subDigitExp = expMod[bitDigits[subKey]];
+    const curExp = expMod[numDigits[b]];
     const subDp = dp[subKey];
-    for (let subMod = 0n; subMod < K; subMod++) {
-      const curCount = subDp[subMod];
-      curDp[(num * expMod[subDigit] + subMod) % K] += curCount;
-      curDp[(subMod * expMod[numDigits[b]] + num) % K] += curCount;
-    }
-  }
 
-  for (let k = 0; k < numK; k++) {
-    curDp[k] /= 2;
+    const numMul = num * subDigitExp;
+    for (let subMod = 0; subMod < K; subMod++) {
+      const curCount = subDp[subMod] / 2;
+      curDp[(numMul + subMod) % K] += curCount;
+      curDp[(subMod * curExp + num) % K] += curCount;
+    }
   }
 }
 

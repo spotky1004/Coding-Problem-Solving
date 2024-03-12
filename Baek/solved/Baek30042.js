@@ -64,11 +64,36 @@ Good
 Hello(1)(0)ByeGood
 3
 1 2 0
-5
-0 1 2 3 3
-1 0 1 0 0
-4 2 1 3 8`,
-`ldoa!`);
+6
+0 1 2 3 3 2
+1 0 1 0 0 3
+4 2 1 3 8 1`,
+`ldoa!!`);
+check(`10 10
+..........
+..........
+.....+^+..
+.....|1|..
+..++.+^+..
+..|+--+...
+..+--+....
+.+---+.+v+
+.+-----<0|
+.......+-+
+2
+1 0
+1 0
+1 0
+1 0
+1
+A
+1
+0
+2
+0 1
+0 0
+1 1`,
+`AA`);
 }
 
 /**
@@ -104,11 +129,6 @@ const O = lines[line++].split(" ").map(Number);
 const P = lines[line++].split(" ").map(BigInt);
 
 // code
-const min = (...args) => args.reduce((a, b) => a > b ? b : a);
-const max = (...args) => args.reduce((a, b) => a > b ? a : b);
-
-
-
 const lenS = [];
 for (let i = 0; i < K; i++) {
   let len = 0n;
@@ -119,7 +139,7 @@ for (let i = 0; i < K; i++) {
     } else {
       let subIdx = "";
       for (let k = j + 1; Si[k] !== ")"; k++) {
-        subIdx = subIdx += Si[k];
+        subIdx += Si[k];
       }
       len += lenS[subIdx];
       j += subIdx.length + 1;
@@ -129,7 +149,7 @@ for (let i = 0; i < K; i++) {
 }
 
 function parseBoard() {
-  const visited = Array.from({ length: H }, _ => Array(W).fill(0));
+  let visited = Array.from({ length: H }, _ => Array(W).fill(0));
   /** @type {Map<number, [boxIdx: number, inputIdx: number, parent: [boxIdx: number, outputIdx: number] | null]>} */
   const inputs = new Map();
   /** @type {Map<number, [boxIdx: number, outputIdx: number, direction: [di: number, dj: number]]>} */
@@ -187,9 +207,10 @@ function parseBoard() {
     let inputCount = 0;
     let outputCount = 0;
     // up
-    for (let j = j1; j <= j2; j++) {
+    for (let j = j1 - 1; j <= j2 + 1; j++) {
       const i = i1 - 1;
       const c = board[i][j];
+      visited[i][j] = true;
       if (c === "v") {
         inputs.set(hashPos(i, j), [boxIdx, inputCount, null]);
         inputCount++;
@@ -199,9 +220,10 @@ function parseBoard() {
       }
     }
     // right
-    for (let i = i1; i <= i2; i++) {
+    for (let i = i1 - 1; i <= i2 + 1; i++) {
       const j = j2 + 1;
       const c = board[i][j];
+      visited[i][j] = true;
       if (c === "<") {
         inputs.set(hashPos(i, j), [boxIdx, inputCount, null]);
         inputCount++;
@@ -211,9 +233,10 @@ function parseBoard() {
       }
     }
     // bottom
-    for (let j = j2; j >= j1; j--) {
+    for (let j = j2 + 1; j >= j1 - 1; j--) {
       const i = i2 + 1;
       const c = board[i][j];
+      visited[i][j] = true;
       if (c === "^") {
         inputs.set(hashPos(i, j), [boxIdx, inputCount, null]);
         inputCount++;
@@ -223,9 +246,10 @@ function parseBoard() {
       }
     }
     // left
-    for (let i = i2; i >= i1; i--) {
+    for (let i = i2 + 1; i >= i1 - 1; i--) {
       const j = j1 - 1;
       const c = board[i][j];
+      visited[i][j] = true;
       if (c === ">") {
         inputs.set(hashPos(i, j), [boxIdx, inputCount, null]);
         inputCount++;
@@ -246,53 +270,71 @@ function parseBoard() {
     }
   }
 
-  loop: for (const [posHash, [boxIdx, outputIdx, [sdi, sdj]]] of outputs) {
+  visited = visited.map((row, i) => row.map((_, j) => board[i][j] === "+" ? visited[i][j] : false));
+  const sortedOutputs = [...outputs].sort((a, b) => a[1][0] - b[1][0]);
+
+  loop: for (const [posHash, [boxIdx, outputIdx, [sdi, sdj]]] of sortedOutputs) {
     let [i, j] = unhashPos(posHash);
     i += sdi;
     j += sdj;
+    let di = sdi;
+    let dj = sdj;
     if (
       isOOB(i, j) ||
       (sdi === 0 && board[i][j] === "|") ||
       (sdj === 0 && board[i][j] === "-")
     ) continue;
     
-    while (!isIO(board[i][j])) {
+    while (!isIO(board[i][j]) && !visited[i][j]) {
       visited[i][j] = true;
-      const lineC = board[i][j];
-      if (lineC === "+") {
+      const c = board[i][j];
+      if (c === "+") {
         if (
           !isOOB(i - 1, j) &&
           !visited[i - 1][j] &&
-          (board[i - 1][j] === "|" || board[i - 1][j] === "+")
-        ) i--;
-        else if (
+          (board[i - 1][j] === "|" || board[i - 1][j] === "+" || board[i - 1][j] === "^")
+        ) {
+          i--;
+          di = -1;
+          dj = 0;
+        } else if (
           !isOOB(i + 1, j) &&
           !visited[i + 1][j] &&
-          (board[i + 1][j] === "|" || board[i + 1][j] === "+")
-        ) i++;
-        else if (
+          (board[i + 1][j] === "|" || board[i + 1][j] === "+" || board[i + 1][j] === "v")
+        ) {
+          i++;
+          di = 1;
+          dj = 0;
+        } else if (
           !isOOB(i, j - 1) &&
           !visited[i][j - 1] &&
-          (board[i][j - 1] === "-" || board[i][j - 1] === "+")
-        ) j--;
-        else if (
+          (board[i][j - 1] === "-" || board[i][j - 1] === "+" || board[i][j - 1] === "<")
+        ) {
+          j--;
+          di = 0;
+          dj = -1;
+        } else if (
           !isOOB(i, j + 1) &&
           !visited[i][j + 1] &&
-          (board[i][j + 1] === "-" || board[i][j + 1] === "+")
-        ) j++;
-      } else if (lineC === "|") {
-        if (!isOOB(i - 1, j) && !visited[i - 1][j]) {
+          (board[i][j + 1] === "-" || board[i][j + 1] === "+" || board[i][j + 1] === ">")
+        ) {
+          j++;
+          di = 0;
+          dj = 1;
+        }
+      } else if (c === "|") {
+        if (!isOOB(i - 1, j) && di === -1) {
           i--;
         } else {
           i++;
         }
-      } else if (lineC === "-") {
-        if (!isOOB(i, j - 1) && !visited[i][j - 1]) {
+      } else if (c === "-") {
+        if (!isOOB(i, j - 1) && dj === -1) {
           j--;
         } else {
           j++;
         }
-      } else if (lineC === ".") {
+      } else if (c === ".") {
         continue loop;
       }
     }
@@ -312,12 +354,14 @@ function parseBoard() {
   return boxes;
 }
 const boxDatas = parseBoard();
+const N = boxDatas.length;
 
 /** @type {bigint[]} */
 const lenPROCs = [];
 /** @type {[inputLens: bigint[], outputLens: bigint[]][]} */
 const lenIOs = [];
-for (let boxIdx = 0; boxIdx < Np; boxIdx++) {
+for (let boxIdx = 0; boxIdx < N; boxIdx++) {
+  /** @type {[inputLens: bigint[], outputLens: bigint[]]} */
   const lens = [[], []];
   lenIOs.push(lens);
 
@@ -326,36 +370,41 @@ for (let boxIdx = 0; boxIdx < Np; boxIdx++) {
   let lenPROC = 0n;
   const Di = D[boxIdx];
   for (let i = 0; i < inputCount; i++) {
-    let len = 0n;
-    if (boxIdx !== 0) {
-      const parent = inputParents[i];
-      len = parent !== null ? lenIOs[parent[0]][1][parent[1]] : 0n;
-    } else {
-      len = lenS[G[i]];
-    }
+    const parent = inputParents[i];
+    const len = parent !== null ? lenIOs[parent[0]][1][parent[1]] : 0n;
     if (Di.includes(i)) lenPROC += len;
     lens[0].push(len);
   }
   lenPROCs.push(lenPROC);
 
   if (outputCount === 0) continue;
-  const Ei = E[boxIdx];
-  const Fi = F[boxIdx];
-  const loopCount = lenPROC / BigInt(Ei);
-  const rem = Number(lenPROC % BigInt(Ei));
-  for (let i = 0; i < outputCount; i++) {
-    let count = 0n;
-    for (const Fij of Fi) {
-      if (Fij === i) count++;
+  if (boxIdx !== 0) {
+    const Ei = E[boxIdx];
+    const Fi = F[boxIdx];
+    const loopCount = lenPROC / BigInt(Ei);
+    const rem = Number(lenPROC % BigInt(Ei));
+    for (let i = 0; i < outputCount; i++) {
+      let count = 0n;
+      for (const Fij of Fi) {
+        if (Fij === i) count++;
+      }
+      const len = count * loopCount;
+      lens[1].push(len);
     }
-    const len = count * loopCount;
-    lens[1].push(len);
-  }
-  for (let i = 0; i < rem; i++) {
-    lens[1][Fi[i]]++;
+    for (let i = 0; i < rem; i++) {
+      lens[1][Fi[i]]++;
+    }
+  } else {
+    for (let i = 0; i < outputCount; i++) {
+      lens[1].push(lenS[G[i]]);
+    }
   }
 }
 
+/**
+ * @param {number} SIdx 
+ * @param {bigint} charIdx 
+ */
 function getNthSChar(SIdx, charIdx) {
   let acc = 0n;
   const Si = S[SIdx];
@@ -378,86 +427,150 @@ function getNthSChar(SIdx, charIdx) {
   return "!";
 }
 
+const E19 = 10n**19n;
+const simulateableChunks = Array.from({ length: N }, () => []);
+loop: for (let boxIdx = 0; boxIdx < N; boxIdx++) {
+  const Ai = boxDatas[boxIdx][0].length;
+  const Di = D[boxIdx];
+
+  const chunks = simulateableChunks[boxIdx];
+
+  const inLens = lenIOs[boxIdx][0];
+  const inCharIdxes = Array(Ai).fill(0n);
+
+  let newDi = Di.filter(Dij => inLens[Dij] !== inCharIdxes[Dij]);
+  let incrementPerLoop = Array(Ai).fill(0n);
+  for (const Dij of newDi) incrementPerLoop[Dij]++;
+  const increments = Array(Ai).fill(0n);
+
+  while (true) {
+    if (newDi.length === 0) {
+      chunks.push(E19);
+      continue loop;
+    }
+    const loopLength = BigInt(newDi.length);
+
+    let l = 1n, r = E19;
+    binSearchLoop: while (l + 1n < r) {
+      const m = (l + r) / 2n;
+
+      const loopCount = m / loopLength;
+      const rem = Number(m % loopLength);
+      increments.fill(0n);
+      for (let i = 0; i < Ai; i++) {
+        increments[i] += loopCount * incrementPerLoop[i];
+      }
+      for (let i = 0; i < rem; i++) {
+        increments[newDi[i]]++;
+      }
+
+      for (let i = 0; i < Ai; i++) {
+        if (inLens[i] - inCharIdxes[i] >= increments[i]) continue;
+        r = m;
+        continue binSearchLoop;
+      }
+      l = m;
+    }
+
+    const simCount = l;
+    const loopCount = simCount / loopLength;
+    const rem = Number(simCount % loopLength);
+    for (let i = 0; i < Ai; i++) {
+      inCharIdxes[i] += loopCount * incrementPerLoop[i];
+    }
+    for (let i = 0; i < rem; i++) {
+      inCharIdxes[newDi[i]]++;
+    }
+    chunks.push(simCount);
+
+    newDi.push(...newDi.splice(0, rem));
+    newDi = newDi.filter(Dij => inLens[Dij] !== inCharIdxes[Dij]);
+    incrementPerLoop = Array(Ai).fill(0n);
+    for (const Dij of newDi) incrementPerLoop[Dij]++;
+  }
+}
+
+const bigE = E.map(BigInt);
+
+/**
+ * @param {number} boxIdx 
+ * @param {number} outputIdx 
+ * @param {bigint} charIdx 
+ */
 function getNthOutputChar(boxIdx, outputIdx, charIdx) {
+  if (boxIdx === 0) {
+    return getNthSChar(G[outputIdx], charIdx);
+  }
+
   const lenPROC = lenPROCs[boxIdx];
   const Ai = boxDatas[boxIdx][0].length;
   const Di = D[boxIdx];
-  const Ei = E[boxIdx];
+  const Ei = bigE[boxIdx];
   const Fi = F[boxIdx];
 
   let countF = 0n;
   for (const Fij of Fi) {
     if (Fij === outputIdx) countF++;
   }
-  const ELoopCount = max(0n, (charIdx + 1n) / countF - 1n);
+  if (countF === 0n) return "!";
+  const ELoopCount = (charIdx + 1n) / countF - 1n;
   let PROCIdx = BigInt(Ei) * ELoopCount;
   let charIdxRem = (charIdx + 1n) - countF * ELoopCount;
-  for (const Fij of Fi) {
-    if (Fij === outputIdx) charIdxRem--;
-    if (charIdxRem === 0n) break;
-    PROCIdx++;
-  }
-
-  if (lenPROC <= PROCIdx) return "!";
-
-  function updateValues() {
-    newDi = Di.filter(Dij => inLens[Dij] !== inCharIdxes[Dij]);
-    loopLen = BigInt(newDi.length);
-    if (loopLen === 0n) return;
-    for (let i = 0; i < Ai; i++) {
-      inLoopCounts[i] = (inLens[i] - inCharIdxes[i]) / loopLen;
+  for (let i = 0; i < 2; i++) {
+    for (const Fij of Fi) {
+      if (charIdxRem === 0n) break;
+      PROCIdx++;
+      if (Fij === outputIdx) charIdxRem--;
     }
   }
+
+  if (lenPROC < PROCIdx) return "!";
 
   let PROCleft = PROCIdx;
   const inLens = lenIOs[boxIdx][0];
   const inCharIdxes = Array(Ai).fill(0n);
-  const inLoopCounts = Array(Ai).fill(0n);
-  let newDi = [];
-  let loopLen = 0n;
-  updateValues();
-  if (PROCleft === 0n) {
-    const Dij = newDi[0];
-    if (boxIdx !== 0) {
-      const parent = boxDatas[boxIdx][0][Dij];
-      if (parent === null) return "!";
-      return getNthOutputChar(parent[0], parent[1], inCharIdxes[Dij]);
-    } else {
-      return getNthSChar(G[Dij], inCharIdxes[Dij]);
-    }
-  }
+
+  let newDi = Di.filter(Dij => inLens[Dij] !== inCharIdxes[Dij]);
+  let incrementPerLoop = Array(Ai).fill(0n);
+  for (const Dij of newDi) incrementPerLoop[Dij]++;
+  const chunks = simulateableChunks[boxIdx];
+  let chunkNr = 0;
 
   while (true) {
-    if (loopLen === 0n) return "!";
+    if (newDi.length === 0) return "!";
+    const loopLength = BigInt(newDi.length);
 
-    if (
-      true ||
-      newDi.map(Dij => inLoopCounts[Dij] === 0n && inLens[Dij] !== inCharIdxes[Dij]) ||
-      PROCleft <= loopLen
-    ) {
-      for (const Dij of newDi) {
-        if (inLens[Dij] === inCharIdxes[Dij]) continue;
-        PROCleft--;
-        if (PROCleft < 0n) {
-          if (boxIdx !== 0) {
-            const parent = boxDatas[boxIdx][0][Dij];
-            if (parent === null) return "!";
-            return getNthOutputChar(parent[0], parent[1], inCharIdxes[Dij]);
-          } else {
-            return getNthSChar(G[Dij], inCharIdxes[Dij]);
-          }
-        }
-        inCharIdxes[Dij]++;
-      }
-    } else {
-
+    let simCount = PROCleft;
+    if (simCount > chunks[chunkNr]) simCount = chunks[chunkNr];
+    PROCleft -= simCount;
+    const loopCount = simCount / loopLength;
+    const rem = Number(simCount % loopLength);
+    for (let i = 0; i < Ai; i++) {
+      inCharIdxes[i] += loopCount * incrementPerLoop[i];
     }
-    updateValues();
+    for (let i = 0; i < rem; i++) {
+      inCharIdxes[newDi[i]]++;
+    }
+
+    if (PROCleft === 0n) {
+      const inputIdx = newDi[(rem + newDi.length - 1) % newDi.length];
+      const parent = boxDatas[boxIdx][0][inputIdx];
+      if (parent === null) return "!";
+      return getNthOutputChar(parent[0], parent[1], inCharIdxes[inputIdx] - 1n);
+    }
+
+    newDi.push(...newDi.splice(0, rem));
+    newDi = newDi.filter(Dij => inLens[Dij] !== inCharIdxes[Dij]);
+    incrementPerLoop = Array(Ai).fill(0n);
+    for (const Dij of newDi) incrementPerLoop[Dij]++;
+    chunkNr++;
   }
 }
 
+// console.log(getNthOutputChar(1, 0, 5n))
+
 // let tmp = "";
-// for (let i = 0n; i < 50n; i++) {
+// for (let i = 0n; i < 40n; i++) {
 //   tmp += getNthOutputChar(3, 0, i);
 // }
 // console.log(tmp);

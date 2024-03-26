@@ -103,7 +103,7 @@ const [interactive, interactiveReceiver, interactiveSender] = !isDev ? (() => {
     });
     console.log("\x1b[34m%s\x1b[0m\x1b[90m%s\x1b[0m", `->`, ` ${answer}`);
 
-    return await new Promise((resolve) => resolve(answer));
+    return await new Promise((resolve) => resolve(interactiveInput(answer)));
   }
 
   /** @type {() => string} */

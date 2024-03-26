@@ -26,27 +26,27 @@ async function interactiveJudger(data) {
 
 /** @param {string} input */
 function interactiveInput(input) {
-  const [[x]] = input
-    .trim()
-    .split("\n")
-    .map(line => line.split(" ").map(Number))
+const [[x]] = input
+  .trim()
+  .split("\n")
+  .map(line => line.split(" ").map(Number))
 
-  return x;
+return x;
 }
 
 /** @param {string} input */
 async function solve(input) {
-  // input
-  const [[N]] = input
-    .trim()
-    .split("\n")
-    .map(line => line.split(" ").map(Number));
+// input
+const [[N]] = input
+  .trim()
+  .split("\n")
+  .map(line => line.split(" ").map(Number));
 
-  // code
-  const x = await interactive(`? 1004`);
+// code
+const x = await interactive(`? 1004`);
 
-  // end
-  if (!isDev) process.exit(0);
+// end
+if (!isDev) process.exit(0);
 }
 
 // Interactive

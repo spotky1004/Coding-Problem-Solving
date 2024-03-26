@@ -71,8 +71,13 @@ const [interactive, interactiveReceiver, interactiveSender] = !isDev ? (() => {
     }
   });
 
-  /** @type {(output: string) => Promise<ReturnType<interactiveInput>>} */
-  async function interactive(output) {
+  /** @type {(output: string, isEnd?: boolean) => Promise<ReturnType<interactiveInput>>} */
+  async function interactive(output, isEnd = false) {
+    if (isEnd) {
+      console.log(output);
+      return;
+    }
+
     /** @type {Promise<ReturnType<interactiveInput>>} */
     const question = new Promise((resolve) => {
       waitingInteractive = true;
@@ -88,8 +93,8 @@ const [interactive, interactiveReceiver, interactiveSender] = !isDev ? (() => {
   let receivedOutput = null;
   let interactiveResolve = null;
 
-  /** @type {(output: string) => Promise<ReturnType<interactiveInput>>} */
-  async function interactive(output) {
+  /** @type {(output: string, isEnd?: boolean) => Promise<ReturnType<interactiveInput>>} */
+  async function interactive(output, isEnd = false) {
     receivedOutput = output.toString();
     console.log("\x1b[35m%s\x1b[0m", `<-`, `${output}`);
 

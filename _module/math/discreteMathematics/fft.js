@@ -28,57 +28,79 @@ function convolution(a, b) {
   const aPadLen = N - a.length;
   const bPadLen = N - b.length;
   const outLen = a.length + b.length - 1;
-  for (let i = 0; i < aPadLen; i++) a.push(0);
-  for (let i = 0; i < bPadLen; i++) b.push(0);
+  a = a.map(Complex);
+  b = b.map(Complex);
+  for (let i = 0; i < aPadLen; i++) a.push([0, 0]);
+  for (let i = 0; i < bPadLen; i++) b.push([0, 0]);
+
+  const order = Array(N).fill(0);
+  for (let i = 1; i < N; i <<= 1) {
+    const add = N / i / 2;
+    for (let j = i; j < N; j++) {
+      if (i & j) order[j] += add;
+    }
+  }
 
   const w = calcNthRootOfUnity(N);
-  const aDft = dft(a.map(Complex), w);
-  const bDft = dft(b.map(Complex), w);
-  const cDft = [];
+  let wTmp = [1, 0];
+  const wPows = Array(N);
   for (let i = 0; i < N; i++) {
-    cDft.push(cMul(aDft[i], bDft[i]));
+    wPows[i] = wTmp;
+    wTmp = cMul(wTmp, w);
+  }
+  const wInv = cInv(calcNthRootOfUnity(N));
+  wTmp = [1, 0];
+  const wInvPows = Array(N);
+  for (let i = 0; i < N; i++) {
+    wInvPows[i] = wTmp;
+    wTmp = cMul(wTmp, wInv);
   }
 
-  const cIdft = dft(cDft, cInv(w));
-  const out = [];
-  for (let i = 0; i < outLen; i++) {
-    out.push(Math.round(cIdft[i][0] / N));
+  dft(a, wPows, order);
+  dft(b, wPows, order);
+  for (let i = 0; i < N; i++) {
+    a[i] = cMul(a[i], b[i]);
   }
 
-  if (aPadLen !== 0) a.splice(N - aPadLen);
-  if (bPadLen !== 0) b.splice(N - bPadLen);
-  return out;
+  dft(a, wInvPows, order);
+  for (let i = 0; i < a.length; i++) {
+    a[i] = Math.round(a[i][0] / N);
+  }
+  while (a.length > outLen) a.pop();
+  
+  return a;
 }
 
 /**
- * @param {number[]} a 
- * @param {Complex} w 
+ * @param {number[]} f 
+ * @param {Complex[]} w 
+ * @param {number[]} order 
 */
-function dft(a, w) {
-  const N = a.length;
-  if (N === 1) return a;
+function dft(f, wPows, order) {
+  const N = f.length;
 
-  const e = [], o = [];
+  let tmp;
   for (let i = 0; i < N; i++) {
-    if (i % 2) o.push(a[i]);
-    else e.push(a[i]);
+    const x = order[i];
+    const y = order[x];
+    if (x >= y) continue;
+    tmp = f[x];
+    f[x] = f[y];
+    f[y] = tmp;
   }
 
-  const wPow = cMul(w, w);
-  const halfN = N / 2;
-
-  const eDft = dft(e, wPow);
-  const oDft = dft(o, wPow);
-  const aResult = [];
-  const sResult = [];
-  let wTmp = [1, 0];
-  for (let i = 0; i < halfN; i++) {
-    const oMul = cMul(wTmp, oDft[i]);
-    aResult.push(cAdd(eDft[i], oMul));
-    sResult.push(cSub(eDft[i], oMul));
-    wTmp = cMul(wTmp, w);
+  for (let i = 2; i <= N; i <<= 1) {
+    const wPowAcc = N / i;
+    const half = i / 2;
+    for (let j = 0; j < N; j += i) {
+      let wPow = 0;
+      for (let k = 0; k < half; k++) {
+        const oMul = cMul(wPows[wPow], f[j + half + k]);
+        tmp = cSub(f[j + k], oMul);
+        f[j + k] = cAdd(f[j + k], oMul);
+        f[j + half + k] = tmp;
+        wPow += wPowAcc;
+      }
+    }
   }
-
-  for (const c of sResult) aResult.push(c);
-  return aResult;
 }

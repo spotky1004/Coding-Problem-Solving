@@ -3,7 +3,7 @@
  * @param {number} b 
  * @param {number} p
 */
-function divAndPow(a, b, p) {
+function powMod(a, b, p) {
   let out = 1;
   let curMul = a;
   let bin = 1;
@@ -22,7 +22,7 @@ function divAndPow(a, b, p) {
  * @param {bigint} b 
  * @param {bigint} p
 */
-function divAndPow(a, b, p) {
+function powMod(a, b, p) {
   let out = 1n;
   let curMul = a;
   let bin = 1n;

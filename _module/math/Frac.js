@@ -36,19 +36,27 @@ class Frac {
   mul(x) {
     const newNum = this.num * x.num;
     const newDen = this.den * x.den;
-    const div = gcd(newNum, newDen);
-    return new Frac(newNum / div, newDen / div);
+    return new Frac(newNum, newDen);
   }
 
   /** @param {Frac} x */
   div(x) {
     const newNum = this.num * x.den;
     const newDen = this.den * x.num;
-    const div = gcd(newNum, newDen);
-    return new Frac(newNum / div, newDen / div);
+    return new Frac(newNum, newDen);
+  }
+
+  inv() {
+    return new Frac(this.den, this.num);
+  }
+
+  /** @param {Frac} x */
+  eq(x) {
+    return x.num === this.num && x.den === this.den;
   }
 
   print() {
+    if (this.den === 1) return this.num.toString();
     return this.num + "/" + this.den;
   }
 }

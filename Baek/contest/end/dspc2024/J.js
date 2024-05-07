@@ -27,8 +27,12 @@ if (!isDev) {
       typeof answer === "string" ?
         out === answer :
         answer.includes(out)
-    ) console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[0m", `${caseName}: `, ` AC `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
+    ) {
+      console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[0m", `${caseName}: `, ` AC `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
+      return true;
+    }
     else console.log("\x1b[1m%s\x1b[41m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[31m%s\x1b[0m", `${caseName}: `, ` WA `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB\n", out.slice(0, 10000));
+    return false;
   }
 
 // cases
@@ -48,6 +52,10 @@ check(`5
 1 1 1 1 1
 1 100`,
 `99`);
+check(`9
+1 2 3 4 1 2 3 4 1
+1 5`,
+`10`);
 }
 
 /**
@@ -114,28 +122,28 @@ function kmp(seq, pattern) {
 
 
 
-const p = kmp(values, values.slice(0, Math.floor(L / 2)))[1];
-const loopValues = values.slice(0, p);
+const p = kmp(values.slice(1), values.slice(0, Math.ceil(L / 2)))[0] + 1;
+const loopValues = values.slice(0, p).map(BigInt);
 const sum = loopValues.reduce((a, b) => a + b);
-let out = 0;
+let out = 0n;
 const aRange = Math.floor(a / p);
-const bRange = Math.floor(b / p);
-const aOffset = (a - p * aRange + 1e9 * p) % p;
-const bOffset = (b - p * aRange + 1e9 * p) % p;
-out += sum * Math.max(0, bRange - aRange - 1);
+const bRange = Math.floor((b - 1) / p);
+const aOffset = (a + 2e9 * p) % p;
+const bOffset = ((b - 1) + 2e9 * p) % p;
+out += sum * BigInt(Math.max(0, bRange - aRange - 1));
 if (aRange === bRange) {
-  for (let i = aOffset; i < bOffset; i++) {
+  for (let i = aOffset; i <= bOffset; i++) {
     out += loopValues[i];
   }
 } else {
   for (let i = aOffset; i < p; i++) {
     out += loopValues[i];
   }
-  for (let i = 0; i < bOffset; i++) {
+  for (let i = 0; i <= bOffset; i++) {
     out += loopValues[i];
   }
 }
 
 // output
-return out;
+return out.toString();
 }

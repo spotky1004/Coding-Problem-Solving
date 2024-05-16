@@ -13,7 +13,7 @@ function gcd(a, b) {
  * @param {bigint} b 
  * @param {bigint} p
 */
-function divAndPow(a, b, p) {
+function powMod(a, b, p) {
   if (b === 0n) return 1n;
   let out = 1n;
   let curMul = a;
@@ -78,9 +78,9 @@ function isPrime(n) {
 
   l: for (const p of millerRabinPrimes) {
     if (n === p) return true;
-    if (divAndPow(p, d, n) === 1n) continue;
+    if (powMod(p, d, n) === 1n) continue;
     for (let i = 0n; i < r; i++) {
-      if (divAndPow(p, 2n**i * d, n) === n - 1n) continue l;
+      if (powMod(p, 2n**i * d, n) === n - 1n) continue l;
     }
     return false;
   }

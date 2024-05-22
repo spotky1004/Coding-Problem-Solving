@@ -1,72 +1,121 @@
-const isDev = process?.platform !== "linux";
-const [[V, E], ...edges] = (
-  !isDev
-    ? require("fs").readFileSync("/dev/stdin").toString()
-    :
-`7 9
-1 2
-2 1
-2 3
-3 2
-3 1
-1 3`
-)
+const isWeb = typeof window === "object";
+const isDev = isWeb || require("fs").existsSync("C:/users/spotky");
+
+if (!isDev) {
+  const input = require("fs").readFileSync("/dev/stdin").toString();
+  const out = solve(input);
+  if (!isWeb) {
+    process.stdout.write(out.toString());
+    process.exit(0);
+  } else {
+    console.log(out);
+  }
+} else {
+  if (!isWeb) require('node:v8').setFlagsFromString('--stack-size=65536');
+
+  let CASE_NR = 1;
+  function check(input, answer, caseName=`Case ${CASE_NR}`) {
+    CASE_NR++;
+    const startTime = new Date().getTime();
+    const startMemory = !isWeb ? process.memoryUsage().heapUsed : window.performance.memory.usedJSHeapSize;
+    const out = solve(input).toString().trim();
+    const timeDeltaStr = (new Date().getTime() - startTime).toString();
+    const timeDeltaZeroStr = " "+"0".repeat(6 - timeDeltaStr.length);
+    const memoryDelta = (((!isWeb ? process.memoryUsage().heapUsed : window.performance.memory.usedJSHeapSize) - startMemory) / 1024).toFixed(0);
+    const memoryDeltaZeroStr = " "+"0".repeat(8 - memoryDelta.length);
+    if (
+      typeof answer === "string" ?
+        out === answer :
+        answer.includes(out)
+    ) console.log("\x1b[1m%s\x1b[42m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[0m", `${caseName}: `, ` AC `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB");
+    else console.log("\x1b[1m%s\x1b[41m%s\x1b[0m\x1b[90m%s\x1b[0m%s\x1b[90m%s\x1b[0m%s\x1b[31m%s\x1b[0m", `${caseName}: `, ` WA `, timeDeltaZeroStr, timeDeltaStr+"ms", memoryDeltaZeroStr, memoryDelta+"KB\n", out.slice(0, 10000));
+  }
+
+// cases
+check(`7 9
+1 4
+4 5
+5 1
+1 6
+6 7
+2 7
+7 3
+3 7
+7 2`,
+`3
+1 4 5 -1
+2 3 7 -1
+6 -1`);
+}
+
+/**
+ * @param {string} input 
+ */
+function solve(input) {
+// input
+const [[V, E], ...edges] = input
   .trim()
   .split("\n")
   .map(line => line.split(" ").map(Number));
 
-const nodeConnections = Array.from({ length: V + 1 }, _ => []);
-for (const [from, to] of edges) {
-  nodeConnections[from].push(to);
-}
-nodeConnections.map(v => v.sort((a, b) => a - b))
+// code
+/**
+ * @param {number[][]} adj 
+*/
+function SCC(adj) {
+  adj.forEach(v => v.sort((a, b) => a - b));
+  let nextId = 0;
+  const ids = Array(adj.length).fill(-1);
+  const isFin = Array(adj.length).fill(false);
 
-const finished = Array(V + 1).fill(false);
-let idAcc = 1;
-const sccId = Array(V + 1).fill(0);
-const SCC = [];
-const sccStack = [];
-function searchSCC(curNode) {
-  const curId = idAcc;
-  sccId[curNode] = curId;
-  idAcc++;
-  sccStack.push(curNode);
+  const stack = [];
+  const out = [];
+  /**
+   * @param {number} u 
+   */
+  function impl(u) {
+    const curId = nextId++;
+    ids[u] = curId;
+    stack.push(u);
 
-  const curConnections = nodeConnections[curNode];
-  for (const to of curConnections) {
-    if (finished[to] || to === curNode) continue;
-    if (sccId[to] !== 0) {
-      sccId[curNode] = Math.min(sccId[curNode], sccId[to]);
-    } else {
-      const toSearch = searchSCC(to);
-      if (toSearch !== -1) {
-        sccId[curNode] = Math.min(sccId[curNode], sccId[to]);
-      }
+    for (const v of adj[u]) {
+      if (isFin[v] || u === v) continue;
+      if (ids[v] === -1) {
+        const result = impl(v);
+        if (result !== -1) ids[u] = Math.min(ids[u], ids[v]);
+      } else ids[u] = Math.min(ids[u], ids[v]);
     }
-  }
-  if (curId !== sccId[curNode]) {
-    return sccId[curNode];
+
+    if (ids[u] !== curId) return ids[u];
+
+    const scc = [];
+    out.push(scc);
+    while (scc[scc.length - 1] !== u) {
+      const sccNode = stack.pop();
+      isFin[sccNode] = true;
+      scc.push(sccNode);
+    }
+    scc.sort((a, b) => a - b);
   }
 
-  const newSCC = [];
-  while (newSCC[newSCC.length - 1] !== curNode) {
-    const toPush = sccStack.pop();
-    finished[toPush] = true;
-    newSCC.push(toPush);
+  for (let i = 0; i < adj.length; i++) {
+    if (isFin[i]) continue;
+    impl(i);
   }
-  newSCC.sort((a, b) => a - b);
-  SCC.push(newSCC);
-  return -1;
-}
-for (let i = 1; i <= V; i++) {
-  if (finished[i]) continue;
-  searchSCC(i);
+
+  out.sort((a, b) => a[0] - b[0]);
+  return out;
 }
 
-SCC
-  .sort((a, b) => a[0] - b[0])
-  .map(v => {
-    v.push(-1);
-    return v;
-  })
-console.log(SCC.length + "\n" + SCC.map(v => v.join(" ")).join("\n"));
+
+
+const adj = Array.from({ length: V + 1 }, () => []);
+for (const [u, v] of edges) adj[u].push(v);
+const out = SCC(adj);
+out.shift();
+out.forEach(scc => scc.push(-1));
+out.unshift([out.length]);
+
+// output
+return out.map(scc => scc.join(" ")).join("\n");
+}

@@ -1,48 +1,47 @@
-function SCC(nodeAdj) {
-  const V = nodeAdj.length;
-  const finished = Array(V).fill(false);
-  let idAcc = 0;
-  const ids = Array(V).fill(-1);
+/**
+ * @param {number[][]} adj 
+*/
+function SCC(adj) {
+  adj.forEach(v => v.sort((a, b) => a - b));
+  let nextId = 0;
+  const ids = Array(adj.length).fill(-1);
+  const isFin = Array(adj.length).fill(false);
 
-  const SCC = [];
   const stack = [];
-
+  const out = [];
+  /**
+   * @param {number} u 
+   */
   function impl(u) {
-    const id = idAcc++;
-    ids[u] = id;
+    const curId = nextId++;
+    ids[u] = curId;
     stack.push(u);
 
-    const adj = nodeAdj[u];
-    for (const v of adj) {
-      if (finished[v] || u === v) continue;
-      if (ids[v] !== -1) {
-        ids[u] = Math.min(ids[u], ids[v]);
-      } else {
-        const toSearch = impl(v);
-        if (toSearch !== -2) {
-          ids[u] = Math.min(ids[u], ids[v]);
-        }
-      }
+    for (const v of adj[u]) {
+      if (isFin[v] || u === v) continue;
+      if (ids[v] === -1) {
+        const result = impl(v);
+        if (result !== -1) ids[u] = Math.min(ids[u], ids[v]);
+      } else ids[u] = Math.min(ids[u], ids[v]);
     }
 
-    if (id !== ids[u]) return ids[u];
+    if (ids[u] !== curId) return ids[u];
 
-    const newSCC = [];
-    while (newSCC[newSCC.length - 1] !== u) {
-      const toPush = stack.pop();
-
-      if (typeof toPush === "undefined") break;
-      finished[toPush] = true;
-      newSCC.push(toPush);
+    const scc = [];
+    out.push(scc);
+    while (scc[scc.length - 1] !== u) {
+      const sccNode = stack.pop();
+      isFin[sccNode] = true;
+      scc.push(sccNode);
     }
-    newSCC.sort((a, b) => a - b);
-    SCC.push(newSCC);
-    return -1;
+    scc.sort((a, b) => a - b);
   }
-  for (let i = 0; i < V; i++) {
-    if (finished[i]) continue;
+
+  for (let i = 0; i < adj.length; i++) {
+    if (isFin[i]) continue;
     impl(i);
   }
 
-  return SCC;
+  out.sort((a, b) => a[0] - b[0]);
+  return out;
 }

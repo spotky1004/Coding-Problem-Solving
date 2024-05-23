@@ -1,11 +1,3 @@
-/**
- * @param {number} a 
- * @param {number} b 
-*/
-function gcd(a, b) {
-  return b ? gcd(b, a%b) : a;
-}
-
 class Frac {
   num = 0;
   den = 0;
@@ -53,6 +45,28 @@ class Frac {
   /** @param {Frac} x */
   eq(x) {
     return x.num === this.num && x.den === this.den;
+  }
+
+  /**
+   * @param  {...Frac} x 
+   */
+  max(...x) {
+    let max = this;
+    for (const f of x) {
+      if (this.num * f.den < f.num * this.den) max = f;
+    }
+    return new Frac(max.num, max.den);
+  }
+
+  /**
+   * @param  {...Frac} x 
+   */
+  min(...x) {
+    let min = this;
+    for (const f of x) {
+      if (this.num * f.den > f.num * this.den) min = f;
+    }
+    return new Frac(min.num, min.den);
   }
 
   print() {

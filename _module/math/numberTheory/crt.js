@@ -1,31 +1,6 @@
 /**
- * @param {bigint[]} a 
- * @param {bigint[]} n 
-*/
-function crt(a, n) {
-  let value = a[0];
-  let mod = n[0];
-  for (let i = 1; i < a.length; i++) {
-    let ai = a[i], ni = n[i];
-    const g = gcd(mod, ni);
-    value = ((ai - value) % mod + mod) % mod;
-    if (value % g !== 0n) return null;
-    const div = gcd(gcd(mod, ni), value);
-    value /= div;
-    ni /= div;
-    mod /= div;
-
-    const result = exGcd(mod, ni, value);
-    if (result === null) return null;
-    console.log(result);
-  }
-  return [value, mod];
-}
-console.log(crt([17n, 23n], [42n, 60n]));
-
-/**
- * @param {bigint} a 
- * @param {bigint} b 
+ * @param {number} a 
+ * @param {number} b 
 */
 function gcd(a, b) {
   return b ? gcd(b, a%b) : a;
@@ -37,7 +12,7 @@ function gcd(a, b) {
  * @param {bigint} b 
  * @param {bigint} n 
  * @returns {[x: bigint, y: bigint]?} 
- */
+*/
 function exGcd(a, b, n) {
   if (a > b) {
     const value = exGcd(b, a, n);
@@ -94,4 +69,20 @@ function exGcdImpl(a, b) {
   if (r === 0n) return [1n, 0n];
   const [yp, xp] = exGcdImpl(b, r);
   return [xp - q * yp, yp];
+}
+
+/**
+ * @param {[x: bigint, m: bigint][]} exprs 
+*/
+function crt(exprs) {
+  let [a1, m1] = exprs[0];
+  for (let i = 1; i < exprs.length; i++) {
+    let [a2, m2] = exprs[i];
+    const g = gcd(m1, m2);
+    if ((a2 - a1) % g !== 0n) return null;
+    const newM = m1 * m2 / g;
+    a1 = (((a1 + m1 * (((a2 - a1) / g) * exGcd(m1 / g, m2 / g, 1n)[0] % (m2 / g))) % newM) + newM) % newM;
+    m1 = newM;
+  }
+  return [a1, m1];
 }

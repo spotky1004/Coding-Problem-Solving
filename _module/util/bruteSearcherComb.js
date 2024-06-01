@@ -3,14 +3,10 @@
  * @param {(comb: number[]) => void} callback 
  */
 function combBruteSearcher(n, callback) {
-  const comb = [];
-  function impl(i = 0) {
+  const maxBit = (1 << n) - 1;
+  for (let i = 0; i <= maxBit; i++) {
+    const comb = [];
+    for (let b = 0; b < n; b++) if (i & (1 << b)) comb.push(b);
     callback(comb);
-    if (i >= n) return;
-    impl(i + 1);
-    comb.push(i);
-    impl(i + 1);
-    comb.pop();
   }
-  impl();
 }

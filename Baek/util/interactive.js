@@ -44,9 +44,6 @@ const [[N]] = input
 
 // code
 const x = await interactive(`? 1004`);
-
-// end
-if (!isDev) process.exit(0);
 }
 
 // Interactive
@@ -75,7 +72,7 @@ const [interactive, interactiveReceiver, interactiveSender] = !isDev ? (() => {
   async function interactive(output, isEnd = false) {
     if (isEnd) {
       console.log(output);
-      return;
+      process.exit(0);
     }
 
     /** @type {Promise<ReturnType<interactiveInput>>} */

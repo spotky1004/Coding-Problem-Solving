@@ -4,7 +4,7 @@
 function genPrimes(n) {
   /** @type {number[]} */
   const primes = [];
-  const net = Array(n).fill(true);
+  const net = Array(n + 1).fill(true);
   for (let i = 2; i <= n; i++) {
     if (net[i]) primes.push(i);
     for (const p of primes) {

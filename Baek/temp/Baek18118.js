@@ -32,20 +32,16 @@ if (!isDev) {
   }
 
 // cases
-check(`4
-1 1
-3 4
-28 43
-370 205`,
-`0
-3
-36
-165`);
-check(`2
-36 72
-36 360`,
-`0
-216`);
+check(`3
+4 3
+4 4
+4 5`,
+`9111111
+1111116
+1111115`);
+check(`1
+3 17`,
+`0`);
 }
 
 /**
@@ -53,91 +49,51 @@ check(`2
  */
 function solve(input) {
 // input
-const [[T], ...cases] = input
+const [[t], ...cases] = input
   .trim()
   .split("\n")
-  .map(line => line.split(" ").map(BigInt));
+  .map(line => line.split(" ").map(Number));
 
 // code
-/**
- * @param {number} a 
- * @param {number} b 
-*/
-function gcd(a, b) {
-  return b ? gcd(b, a%b) : a;
-}
-
-/**
- * @param {bigint} a 
- * @param {bigint} b 
- * @param {bigint} p
-*/
-function powMod(a, b, p) {
-  if (b === 0n) return 1n;
-  let out = 1n;
-  let curMul = a;
-  let bin = 1n;
-  while (bin <= b) {
-    if (b & bin) {
-      out = out*curMul % p;
-    }
-    bin *= 2n;
-    curMul = curMul**2n % p;
-  }
-  return out;
-}
-
-/**
- * @param {number} n 
-*/
-function genPrimes(n) {
-  /** @type {number[]} */
-  const primes = [];
-  const net = Array(n).fill(true);
-  for (let i = 2; i <= n; i++) {
-    if (net[i]) primes.push(i);
-    for (const p of primes) {
-      const a = i * p;
-      if (a > n) break;
-      net[a] = false;
-      if (i % p === 0) break;
-    }
-  }
-  return primes;
-}
-
-const primes = genPrimes(Math.ceil(Math.sqrt(1e9))).map(BigInt);
-function calcEularPhi(n) {
-  let out = n;
-  for (const p of primes) {
-    if (n < p * p) break;
-    if (n % p !== 0n) continue;
-    out -= out / p;
-    while (n % p === 0n) n /= p;
-  }
-  if (n !== 1n) out -= out / n;
-  return out;
-}
-
-
-
 const out = [];
-for (const [N, M] of cases) {
-  if (N === M || M / gcd(N, M) === 2n) {
-    out.push(0n);
-    continue;
+for (const [n, m] of cases) {
+  const digitVals = [1];
+  for (let i = 1; i < 2 * n; i++) digitVals.push(digitVals[i - 1] * 10 % m);
+  const digitValMults = [];
+  for (let i = 0; i < 2 * n; i++) {
+    const vals = [];
+    digitValMults.push(vals);
+    for (let j = 0; j <= 11; j++) vals.push(digitVals[i] * j % m);
   }
 
-  const mods = [M];
-  while (mods[mods.length - 1] !== 1n) mods.push(calcEularPhi(mods[mods.length - 1]));
-  // console.log(mods);
+  function search(modVal = 0, digitIdx = 0, segIdx = 0) {
+    // console.log(modVal, digitIdx, segIdx);
+    if (segIdx === n) {
+      if (modVal === 0) return true;
+      return false;
+    }
 
-  let cur = 0n;
-  while (mods.length > 0) {
-    cur = powMod(N, cur, mods.pop());
-    // console.log(cur);
+    let maxVal = "";
+    let value11 = modVal + digitValMults[digitIdx][11];
+    if (value11 >= m) value11 -= m;
+    const result11 = search(value11, digitIdx + 2, segIdx + 1);
+    if (result11 !== false) {
+      const newVal = (result11 === true ? "" : result11) + "11";
+      if (Number(newVal) > Number(maxVal)) maxVal = newVal;
+    }
+
+    for (let i = 9; i >= 0; i--) {
+      let value = modVal + digitValMults[digitIdx][i];
+      if (value >= m) value -= m;
+      const result = search(value, digitIdx + 1, segIdx + 1);
+      if (result !== false) {
+        const newVal = (result === true ? "" : result) + i.toString();
+        if (Number(newVal) > Number(maxVal)) maxVal = newVal;
+      }
+    }
+    return maxVal;
   }
-  out.push(cur);
+  out.push(BigInt(search()).toString());
 }
 
 // output

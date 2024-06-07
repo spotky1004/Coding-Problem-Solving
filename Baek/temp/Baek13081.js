@@ -32,20 +32,16 @@ if (!isDev) {
   }
 
 // cases
-check(`4
-1 1
-3 4
-28 43
-370 205`,
-`0
-3
-36
-165`);
-check(`2
-36 72
-36 360`,
-`0
-216`);
+check(`3
+30 123
+30 1
+39 12222444456679999`,
+`R 10
+C 20
+122233338889`);
+check(`1
+100 1234444`,
+``);
 }
 
 /**
@@ -53,91 +49,40 @@ check(`2
  */
 function solve(input) {
 // input
-const [[T], ...cases] = input
+const [[t], ...cases] = input
   .trim()
   .split("\n")
-  .map(line => line.split(" ").map(BigInt));
+  .map(line => line.split(" "));
 
 // code
-/**
- * @param {number} a 
- * @param {number} b 
-*/
-function gcd(a, b) {
-  return b ? gcd(b, a%b) : a;
+const calcNext = (x) => {
+  const rev = Array.from(BigInt(x).toString()).reverse().join("");
+  return BigInt(Array.from((BigInt(x) + BigInt(rev)).toString()).sort().join("")).toString();
 }
 
-/**
- * @param {bigint} a 
- * @param {bigint} b 
- * @param {bigint} p
-*/
-function powMod(a, b, p) {
-  if (b === 0n) return 1n;
-  let out = 1n;
-  let curMul = a;
-  let bin = 1n;
-  while (bin <= b) {
-    if (b & bin) {
-      out = out*curMul % p;
-    }
-    bin *= 2n;
-    curMul = curMul**2n % p;
-  }
-  return out;
-}
-
-/**
- * @param {number} n 
-*/
-function genPrimes(n) {
-  /** @type {number[]} */
-  const primes = [];
-  const net = Array(n).fill(true);
-  for (let i = 2; i <= n; i++) {
-    if (net[i]) primes.push(i);
-    for (const p of primes) {
-      const a = i * p;
-      if (a > n) break;
-      net[a] = false;
-      if (i % p === 0) break;
-    }
-  }
-  return primes;
-}
-
-const primes = genPrimes(Math.ceil(Math.sqrt(1e9))).map(BigInt);
-function calcEularPhi(n) {
-  let out = n;
-  for (const p of primes) {
-    if (n < p * p) break;
-    if (n % p !== 0n) continue;
-    out -= out / p;
-    while (n % p === 0n) n /= p;
-  }
-  if (n !== 1n) out -= out / n;
-  return out;
-}
-
-
-
+const chainRegex1 = new RegExp("^1233+4444$", "");
+const chainRegex2 = new RegExp("^5566+7777$", "");
 const out = [];
-for (const [N, M] of cases) {
-  if (N === M || M / gcd(N, M) === 2n) {
-    out.push(0n);
-    continue;
+caseLoop: for (const [M, n] of cases) {
+  const numM = Number(M);
+  const seq = [n];
+  for (let i = 2; i <= numM; i++) {
+    seq.push(calcNext(seq[i - 2]));
   }
-
-  const mods = [M];
-  while (mods[mods.length - 1] !== 1n) mods.push(calcEularPhi(mods[mods.length - 1]));
-  // console.log(mods);
-
-  let cur = 0n;
-  while (mods.length > 0) {
-    cur = powMod(N, cur, mods.pop());
-    // console.log(cur);
+  const seen = new Set();
+  for (let i = 1; i <= numM; i++) {
+    const value = seq[i - 1];
+    if (seen.has(value)) {
+      out.push(`R ${i}`);
+      continue caseLoop;
+    }
+    seen.add(value);
+    if (chainRegex1.test(value) || chainRegex2.test(value)) {
+      out.push(`C ${i}`);
+      continue caseLoop;
+    }
   }
-  out.push(cur);
+  out.push(seq[numM - 1]);
 }
 
 // output

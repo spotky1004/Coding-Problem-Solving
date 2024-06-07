@@ -32,20 +32,78 @@ if (!isDev) {
   }
 
 // cases
-check(`4
-1 1
-3 4
-28 43
-370 205`,
-`0
-3
-36
-165`);
-check(`2
-36 72
-36 360`,
-`0
-216`);
+check(`4 5
+1122`,
+`4`);
+check(`4 5
+2211`,
+`5`);
+check(`10 10
+1222222122`,
+`10`);
+check(`4 50000
+1111`,
+`46875`);
+check(`4 1024
+1111`,
+`960`);
+check(`4 2047
+1111`,
+`1920`);
+check(`15 2047
+222222222222222`,
+`2046`);
+check(`15 2047
+122222222222222`,
+`2046`);
+check(`13 2047
+1111111111122`,
+`2047`);
+check(`4 20
+1112`,
+`19`);
+check(`4 20
+1222`,
+`18`);
+check(`4 20
+1111`,
+`19`);
+check(`3 20
+111`,
+`18`);
+check(`2 20
+12`,
+`15`);
+check(`8 23947293
+12212211`,
+`23853749`);
+check(`21 2047
+222222222222222222221`,
+`2047`);
+check(`10010 1024
+1111111111${"2".repeat(10000)}`,
+`1023`);
+check(`10010 1023
+1111111111${"2".repeat(10000)}`,
+`1023`);
+check(`10009 1023
+111111111${"2".repeat(10000)}`,
+`1022`);
+check(`12 99999999
+111111111111`,
+`99975585`);
+check(`4 99999999
+1111`,
+`93750000`);
+check(`1 99999999
+1`,
+`50000000`);
+check(`1 99999999
+2`,
+`49999999`);
+check(`4 99999999
+1212`,
+`93749999`);
 }
 
 /**
@@ -53,93 +111,23 @@ check(`2
  */
 function solve(input) {
 // input
-const [[T], ...cases] = input
+const [[rawN, rawT], [P]] = input
   .trim()
   .split("\n")
-  .map(line => line.split(" ").map(BigInt));
+  .map(line => line.split(" "));
+const N = Number(rawN);
+const T = Number(rawT);
 
 // code
-/**
- * @param {number} a 
- * @param {number} b 
-*/
-function gcd(a, b) {
-  return b ? gcd(b, a%b) : a;
+const rem = parseInt([...P].reverse().map(v => 2 - Number(v)).join(""), 2);
+let ans = T;
+let tLeft = T;
+if (tLeft > rem) {
+  ans--;
+  tLeft -= rem + 1;
 }
-
-/**
- * @param {bigint} a 
- * @param {bigint} b 
- * @param {bigint} p
-*/
-function powMod(a, b, p) {
-  if (b === 0n) return 1n;
-  let out = 1n;
-  let curMul = a;
-  let bin = 1n;
-  while (bin <= b) {
-    if (b & bin) {
-      out = out*curMul % p;
-    }
-    bin *= 2n;
-    curMul = curMul**2n % p;
-  }
-  return out;
-}
-
-/**
- * @param {number} n 
-*/
-function genPrimes(n) {
-  /** @type {number[]} */
-  const primes = [];
-  const net = Array(n).fill(true);
-  for (let i = 2; i <= n; i++) {
-    if (net[i]) primes.push(i);
-    for (const p of primes) {
-      const a = i * p;
-      if (a > n) break;
-      net[a] = false;
-      if (i % p === 0) break;
-    }
-  }
-  return primes;
-}
-
-const primes = genPrimes(Math.ceil(Math.sqrt(1e9))).map(BigInt);
-function calcEularPhi(n) {
-  let out = n;
-  for (const p of primes) {
-    if (n < p * p) break;
-    if (n % p !== 0n) continue;
-    out -= out / p;
-    while (n % p === 0n) n /= p;
-  }
-  if (n !== 1n) out -= out / n;
-  return out;
-}
-
-
-
-const out = [];
-for (const [N, M] of cases) {
-  if (N === M || M / gcd(N, M) === 2n) {
-    out.push(0n);
-    continue;
-  }
-
-  const mods = [M];
-  while (mods[mods.length - 1] !== 1n) mods.push(calcEularPhi(mods[mods.length - 1]));
-  // console.log(mods);
-
-  let cur = 0n;
-  while (mods.length > 0) {
-    cur = powMod(N, cur, mods.pop());
-    // console.log(cur);
-  }
-  out.push(cur);
-}
+ans -= Math.floor(tLeft / 2 ** N);
 
 // output
-return out.join("\n");
+return ans;
 }
